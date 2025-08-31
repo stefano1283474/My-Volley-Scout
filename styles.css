@@ -518,7 +518,18 @@ body {
 }
 
 /* La pagina non scrolla; gestiamo scroll solo dentro la sezione */
-#match-data.page { overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+/* FIX: non forzare display anche quando la pagina non è attiva */
+#match-data.page { 
+  overflow: hidden; 
+  /* display rimosso per permettere a .page (display:none) di funzionare */
+  /* display: flex; */
+  /* flex-direction spostata nella variante .active per layout corretto */
+  min-height: 0; 
+}
+#match-data.page.active {
+  display: flex;              /* attivo: layout flessibile */
+  flex-direction: column;     /* verticale */
+}
 
 /* Sezione Elenco Partite: titolo fisso + lista scrollabile */
 #matches-list-section {
