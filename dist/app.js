@@ -103,48 +103,27 @@ function initializeMatchDataPage() {
     console.log('matchesListSection:', matchesListSection);
 
     if (newMatchBtn && loadMatchesBtn && newMatchSection && matchesListSection) {
-        // Funzioni helper tab-like
-        const activateTabs = (activeBtn, inactiveBtn) => {
-            activeBtn.classList.remove('btn-secondary');
-            activeBtn.classList.add('btn-primary');
-            activeBtn.setAttribute('aria-selected', 'true');
+        newMatchBtn.addEventListener('click', () => {
+    console.log('New Match button clicked');
+    newMatchSection.style.display = 'block';
+    matchesListSection.style.display = 'none';
+ });
 
-            inactiveBtn.classList.remove('btn-primary');
-            inactiveBtn.classList.add('btn-secondary');
-            inactiveBtn.setAttribute('aria-selected', 'false');
-        };
-        const showNewTab = () => {
+            loadMatchesBtn.addEventListener('click', () => {
+    console.log('Load Matches button clicked');
+    newMatchSection.style.display = 'none';
+    matchesListSection.style.display = 'block';
+    loadMatchesList(); // Refresh lista
+ });
+            console.log('Listeners added to buttons');
+            console.log('Button listeners successfully added');
+
+            // Mostra di default la sezione "Nuova Partita"
             newMatchSection.style.display = 'block';
             matchesListSection.style.display = 'none';
-            activateTabs(newMatchBtn, loadMatchesBtn);
-            // Ricalcola layout e altezze di scroll
-            setTimeout(() => fitActivePageToViewport(), 0);
-        };
-        const showListTab = () => {
-            newMatchSection.style.display = 'none';
-            matchesListSection.style.display = 'block';
-            activateTabs(loadMatchesBtn, newMatchBtn);
-            loadMatchesList();
-            setTimeout(() => fitActivePageToViewport(), 0);
-        };
-
-        // Listeners
-        newMatchBtn.addEventListener('click', () => {
-            console.log('New Match button clicked');
-            showNewTab();
-        });
-        loadMatchesBtn.addEventListener('click', () => {
-            console.log('Load Matches button clicked');
-            showListTab();
-        });
-
-        console.log('Listeners added to buttons');
-
-        // Stato iniziale: tab "Nuova Partita"
-        showNewTab();
-    } else {
-        console.log('Some elements not found');
-    }
+        } else {
+            console.log('Some elements not found');
+        }
     }
 
 
