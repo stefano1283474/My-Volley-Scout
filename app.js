@@ -1414,3 +1414,276 @@ function importRosterFromFile(file) {
     reader.onerror = () => alert('Errore lettura file.');
     reader.readAsText(file, 'utf-8');
 }
+
+// === SCOUTING PAGE ===
+function initializeScoutingPage() {
+    // Inizializza solo se siamo nella pagina di scouting
+    const scoutingPage = document.getElementById('scouting');
+    if (scoutingPage) {
+        const startSetBtn = document.getElementById('start-set');
+        const submitActionBtn = document.getElementById('submit-action');
+        const actionStringInput = document.getElementById('action-string');
+        
+        if (startSetBtn) {
+            startSetBtn.addEventListener('click', startSet);
+        }
+        
+        if (submitActionBtn) {
+            submitActionBtn.addEventListener('click', submitAction);
+        }
+        
+        // Enter key per submit azione
+        if (actionStringInput) {
+            actionStringInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitAction();
+                }
+            });
+        }
+        
+        // Inizializza interfaccia guidata
+        initializeGuidedScouting();
+    }
+}
+
+function openDialog(dialogId) {
+    const dialog = document.getElementById(dialogId);
+    if (dialog) {
+        try {
+            if (typeof dialog.showModal === 'function') {
+                dialog.showModal();
+            } else {
+                // Fallback se showModal non è supportato
+                dialog.setAttribute('open', 'open');
+            }
+        } catch (e) {
+            // Ulteriore fallback in caso di eccezioni
+            dialog.setAttribute('open', 'open');
+        }
+    }
+}
+
+function closeDialog(dialogId) {
+    const dialog = document.getElementById(dialogId);
+    if (dialog) {
+        try {
+            if (typeof dialog.close === 'function') {
+                dialog.close();
+            } else {
+                dialog.removeAttribute('open');
+            }
+        } catch (e) {
+            dialog.removeAttribute('open');
+        }
+    }
+}
+
+function initializeGuidedScouting() {
+    // Event listeners per interfaccia guidata
+    const backBtn = document.getElementById('back-to-player');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            showScoutingStep('step-player');
+        });
+    }
+    
+    // Event listeners per valutazioni
+    const evalButtons = document.querySelectorAll('.eval-btn');
+    evalButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const evaluation = parseInt(e.target.dataset.eval);
+            submitGuidedAction(evaluation);
+        });
+    });
+    
+    // Non aprire automaticamente il dialog; verrà aperto quando l'utente entra nella pagina Scouting
+}
+
+function showScoutingStep(stepId) {
+    document.querySelectorAll('.scouting-step').forEach(step => {
+        step.classList.remove('active');
+    });
+    document.getElementById(stepId).classList.add('active');
+}
+
+function updatePlayersGrid() {
+    const container = document.getElementById('players-grid');
+    
+    if (!appState.currentRoster || appState.currentRoster.length === 0) {
+        container.innerHTML = '<p style="color: #666;">Nessun roster caricato. Vai alla sezione Roster per creare un roster.</p>';
+        return;
+    }
+    
+    const validPlayers = appState.currentRoster.filter(p => p && (p.number || p.name || p.surname));
+    
+    if (validPlayers.length === 0) {
+        container.innerHTML = '<p style="color: #666;">Nessun giocatore valido nel roster.</p>';
+        return;
+    }
+    
+    container.innerHTML = validPlayers.map(player => {
+        const displayName = player.nickname || `${player.name} ${player.surname}`.trim() || `Giocatore ${player.number}`;
+        return `
+            <button class="player-btn" data-number="${player.number}" data-name="${displayName}">
+                <div class="player-number">${player.number}</div>
+                <div class="player-name">${displayName}</div>
+                <div class="player-role">${player.role || ''}</div>
+            </button>
+        `;
+    }).join('');
+    
+    // Aggiungi event listeners
+    container.querySelectorAll('.player-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const number = e.currentTarget.dataset.number;
+            const name = e.currentTarget.dataset.name;
+            selectPlayer(number, name);
+        });
+    });
+}
+
+function selectPlayer(number, name) {
+    appState.selectedPlayer = { number, name };
+    
+    const playerInfoElement = document.getElementById('selected-player-info');
+    if (playerInfoElement) {
+        playerInfoElement.textContent = `${number} - ${name}`;
+    }
+    
+    // Aggiorna il fondamentale corrente
+    updateNextFundamental();
+    
+    // Passa alla selezione della valutazione
+    showScoutingStep('step-action');
+}
+
+function selectEvaluation(evaluation) {
+    appState.selectedEvaluation = evaluation;
+    
+    // Evidenzia il pulsante selezionato
+    const evalButtons = document.querySelectorAll('.eval-btn');
+    evalButtons.forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Trova il pulsante corretto basandosi sul testo o data attribute
+    const selectedBtn = Array.from(evalButtons).find(btn => {
+        return btn.textContent.startsWith(evaluation.toString()) || btn.dataset.eval === evaluation.toString();
+    });
+    
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+}
+
+function submitGuidedAction() {
+    if (!appState.selectedPlayer) {
+        alert('Errore: nessun giocatore selezionato');
+        return;
+    }
+    
+    if (!appState.selectedEvaluation) {
+        alert('Seleziona una valutazione');
+        return;
+    }
+    
+    const fundamental = predictNextFundamental();
+    const evaluation = appState.selectedEvaluation;
+    const quartet = `${appState.selectedPlayer.number.padStart(2, '0')}${fundamental}${evaluation}`;
+    appState.currentSequence.push({quartet, playerName: appState.selectedPlayer.name});
+    
+    const tempResult = determineFinalResult(fundamental, evaluation);
+    let isPoint = tempResult === 'home_point' || tempResult === 'away_point';
+    
+    if (isPoint) {
+        const actionString = appState.currentSequence.map(s => s.quartet).join(' ');
+        try {
+            const result = parseAction(actionString);
+            processActionResult(result);
+            
+            appState.actionsLog.push({
+                action: actionString,
+                result: result,
+                timestamp: new Date().toLocaleTimeString('it-IT'),
+                guided: true
+            });
+            
+            appState.currentSequence = [];
+        } catch (error) {
+            alert(`Errore nell'azione: ${error.message}`);
+            appState.currentSequence.pop(); // Rimuovi l'ultima se errore
+            return;
+        }
+    } else {
+    }
+    
+    // Aggiorna UI
+    updateScoutingUI();
+    updateActionsLog();
+    updateNextFundamental();
+    updatePlayersGrid();
+    
+    // Torna alla selezione giocatore
+    showScoutingStep('step-player');
+    
+    // Reset selezione
+    appState.selectedPlayer = null;
+    appState.selectedEvaluation = null;
+    
+    if (isPoint) checkSetEnd();
+}
+
+function submitOpponentError() {
+    const actionString = 'avv';
+    try {
+        const result = parseAction(actionString);
+        processActionResult(result);
+        
+        appState.actionsLog.push({
+            action: actionString,
+            result: result,
+            timestamp: new Date().toLocaleTimeString('it-IT'),
+            guided: true
+        });
+        
+        updateScoutingUI();
+        updateActionsLog();
+        checkSetEnd();
+        updateNextFundamental();
+        showScoutingStep('player-selection');
+    } catch (error) {
+        alert(`Errore: ${error.message}`);
+    }
+}
+
+function updateGamePhase(fundamental, evaluation) {
+    const eval = parseInt(evaluation);
+    
+    // Logica per cambiare la fase di gioco basata sul risultato dell'azione
+    if (fundamental === 'b') { // Servizio
+        if (eval === 1) {
+            // Errore al servizio = punto avversario, passiamo in ricezione
+            appState.currentPhase = 'ricezione';
+        } else if (eval === 5) {
+            // Ace = punto nostro, rimaniamo al servizio
+            appState.currentPhase = 'servizio';
+        }
+        // Per valutazioni 2,3,4 la fase rimane invariata fino al prossimo punto
+    } else if (fundamental === 'r') { // Ricezione
+        if (eval === 1) {
+            // Errore in ricezione = punto avversario, passiamo al servizio
+            appState.currentPhase = 'servizio';
+        }
+        // Per altre valutazioni continuiamo nella stessa fase
+    } else if (fundamental === 'a') { // Attacco
+        if (eval === 1) {
+            // Errore in attacco = punto avversario
+            if (appState.currentPhase === 'servizio') {
+                appState.currentPhase = 'ricezione';
+            } else {
+                appState.currentPhase = 'servizio';
+            }
+        } else if (eval === 5) {
+            // Punto in attacco = nostro punto
+            if (appState.currentPhase === 'ricezione') {
+                app

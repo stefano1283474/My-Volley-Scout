@@ -88,8 +88,8 @@
                     <div class="section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                         <h2 style="margin:0;">Roster Salvati</h2>
                         <div style="display:flex; gap:8px; align-items:center;">
-                            <button id="import-roster-list-btn" class="btn btn-secondary">Importa JSON</button>
-                            <input type="file" id="import-roster-list-file" accept="application/json,.json" style="display:none" />
+                            <button id="import-roster-list-btn" class="btn btn-secondary">Importa CSV</button>
+                            <input type="file" id="import-roster-list-file" accept="text/csv,.csv,application/json,.json" style="display:none" />
                         </div>
                     </div>
                     <div id="saved-rosters" class="list"></div>
@@ -104,8 +104,8 @@
                             <button type="button" id="save-roster-dialog" class="btn btn-primary">Salva Roster</button>
                             <button type="button" id="clear-roster-dialog" class="btn" >Pulisci</button>
                             <button type="button" id="export-roster-dialog" class="btn">Esporta</button>
-                            <button type="button" id="import-roster-dialog" class="btn">Importa</button>
-                            <input type="file" id="import-roster-file" accept="application/json,.json" style="display:none" />
+                            <button type="button" id="import-roster-dialog" class="btn">Importa CSV</button>
+                            <input type="file" id="import-roster-file" accept="text/csv,.csv,application/json,.json" style="display:none" />
                             <button type="button" class="btn" onclick="closeDialog('roster-dialog')">Chiudi</button>
                         </div>
                         <div id="roster-form-dialog" class="roster-form"></div>
