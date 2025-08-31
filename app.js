@@ -241,8 +241,8 @@ function loadMatchesList() {
         return `
             <div class="match-item">
                 <div class="match-title">${match.homeTeam} vs ${match.awayTeam}</div>
-                <div class="match-details">${matchType}</div>
                 <div class="match-details">${matchDate}</div>
+                <div class="match-details">${matchType}</div>
                 <div class="match-actions">
                     <button class="btn btn-primary" onclick="loadMatch(${match.id})">Carica</button>
                     <button class="btn btn-danger" onclick="deleteMatch(${match.id})">Elimina</button>
