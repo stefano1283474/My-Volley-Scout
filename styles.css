@@ -502,14 +502,14 @@ body {
 #matches-list-section.hidden { display: none !important; }
 
 /* --- Override Match-Data: pulsanti in riga e scroll sotto al titolo --- */
-#match-data .match-actions {
+#match-data > .match-actions {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
   flex-wrap: nowrap; /* mai andare a capo */
 }
-#match-data .match-actions .btn {
+#match-data > .match-actions .btn {
   display: inline-flex;       /* evita width:100% da stili generici */
   width: auto !important;     /* forza larghezza in base al contenuto */
   min-width: max-content;     /* impedisce lo schiacciamento del testo */
