@@ -892,10 +892,11 @@ function updateActionsLog() {
         }
         
         const actionDisplay = log.action;
+        const header = log.score ? `Punteggio: ${log.score}` : (log.timestamp || '');
         
         return `
             <div class="action-entry ${log.guided ? 'guided-action' : ''}">
-                <strong>${log.timestamp}</strong>: ${actionDisplay}
+                <strong>${header}</strong>: ${actionDisplay}
                 <div class="action-result">${resultText}</div>
             </div>
         `;
@@ -1255,11 +1256,18 @@ function updatePlayersGrid() {
     
     container.innerHTML = validPlayers.map(player => {
         const displayName = player.nickname || `${player.name} ${player.surname}`.trim() || `Giocatore ${player.number}`;
+        const role = player.role || '';
+        const roleClass = role === 'Palleggiatore' ? 'role-pal'
+                        : role === 'Opposto' ? 'role-opp'
+                        : role === 'Schiacciatore' ? 'role-sch'
+                        : role === 'Centrale' ? 'role-ctr'
+                        : role === 'Libero' ? 'role-lib'
+                        : '';
         return `
-            <button class="player-btn" data-number="${player.number}" data-name="${displayName}">
+            <button class="player-btn ${roleClass}" data-role="${role}" data-number="${player.number}" data-name="${displayName}">
                 <div class="player-number">${player.number}</div>
                 <div class="player-name">${displayName}</div>
-                <div class="player-role">${player.role || ''}</div>
+                <div class="player-role">${role}</div>
             </button>
         `;
     }).join('');
@@ -1336,7 +1344,7 @@ function submitGuidedAction() {
             appState.actionsLog.push({
                 action: actionString,
                 result: result,
-                timestamp: new Date().toLocaleTimeString('it-IT'),
+                score: `${appState.homeScore}-${appState.awayScore}`,
                 guided: true
             });
             
@@ -1374,7 +1382,7 @@ function submitOpponentError() {
         appState.actionsLog.push({
             action: actionString,
             result: result,
-            timestamp: new Date().toLocaleTimeString('it-IT'),
+            score: `${appState.homeScore}-${appState.awayScore}`,
             guided: true
         });
         
@@ -1432,4 +1440,49 @@ function updateGamePhase(fundamental, evaluation) {
 
     // Aggiorna il display della fase corrente
     updateCurrentPhaseDisplay();
+}
+
+function updateActionsLog() {
+    const container = document.getElementById('actions-list');
+    
+    let displayLogs = appState.actionsLog.slice(-9).reverse();
+    
+    if (appState.currentSequence.length > 0) {
+        const currentString = appState.currentSequence.map(s => s.quartet).join(' ');
+        displayLogs.unshift({
+            timestamp: 'Corrente',
+            action: currentString,
+            result: {result: 'continue'},
+            guided: true
+        });
+    }
+    
+    if (displayLogs.length === 0) {
+        container.innerHTML = '<p style="color: #666;">Nessuna azione registrata</p>';
+        return;
+    }
+    
+    container.innerHTML = displayLogs.map(log => {
+        let resultText = '';
+        switch (log.result.result) {
+            case 'home_point':
+                resultText = '🏐 Punto Casa';
+                break;
+            case 'away_point':
+                resultText = '🏐 Punto Ospiti';
+                break;
+            default:
+                resultText = '↔️ In corso';
+        }
+        
+        const actionDisplay = log.action;
+        const header = log.score ? `Punteggio: ${log.score}` : (log.timestamp || '');
+        
+        return `
+            <div class="action-entry ${log.guided ? 'guided-action' : ''}">
+                <strong>${header}</strong>: ${actionDisplay}
+                <div class="action-result">${resultText}</div>
+            </div>
+        `;
+    }).join('');
 }
