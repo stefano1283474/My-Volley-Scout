@@ -28,7 +28,7 @@
                 
                 <div class="match-actions">
                     <button id="new-match-btn" class="btn btn-primary">Nuova Partita</button>
-                    <button id="load-matches-btn" class="btn btn-secondary">Carica Elenco Partite Precedenti</button>
+                    <button id="load-matches-btn" class="btn btn-secondary">Elenco Partite Salvate</button>
                 </div>
                 
                 <div id="new-match-section" class="section" style="display: none;">
@@ -75,6 +75,12 @@
             <!-- Roster Page -->
             <div id="roster" class="page">
                 
+                <div class="roster-top-actions">
+                    <button id="btn-create-roster" class="btn btn-primary">Crea nuovo roster</button>
+                    <button id="btn-list-rosters" class="btn btn-secondary" aria-disabled="false">Elenco Roster</button>
+                    <button id="btn-load-roster" class="btn btn-primary" disabled aria-disabled="true">Carica Roster</button>
+                </div>
+                
                 <div class="section">
                     <h3>Roster Salvati</h3>
                     <div id="saved-rosters" class="rosters-list">
@@ -82,7 +88,7 @@
                     </div>
                 </div>
 
-                <div class="section">
+                <div class="section" style="display: none;">
                     <h3>Nuovo/Modifica Roster</h3>
                     <div class="roster-actions">
                         <input type="text" id="roster-name" placeholder="Nome Roster" class="roster-name-input">
@@ -94,6 +100,19 @@
                         <!-- Griglia giocatori generata dinamicamente -->
                     </div>
                 </div>
+
+                <dialog id="roster-dialog" aria-modal="true" aria-label="Crea nuovo roster">
+                    <form method="dialog" class="roster-dialog-form" id="roster-dialog-form">
+                        <h3>Crea Nuovo Roster</h3>
+                        <div class="roster-actions">
+                            <input type="text" id="roster-name-dialog" placeholder="Nome Roster" class="roster-name-input">
+                            <button id="save-roster-dialog" type="button" class="btn btn-primary">Salva Roster</button>
+                            <button id="clear-roster-dialog" type="button" class="btn btn-secondary">Pulisci</button>
+                            <button id="close-roster-dialog" type="submit" class="btn btn-secondary">Chiudi</button>
+                        </div>
+                        <div id="roster-form-dialog" class="roster-grid"></div>
+                    </form>
+                </dialog>
             </div>
 
             <!-- Scouting Page -->

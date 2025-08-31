@@ -259,21 +259,64 @@ function deleteMatch(matchId) {
 
 // === ROSTER PAGE ===
 function initializeRosterPage() {
-    document.getElementById('save-roster').addEventListener('click', saveCurrentRoster);
-    document.getElementById('clear-roster').addEventListener('click', clearRoster);
-    
-    generateRosterForm();
+    const btnCreate = document.getElementById('btn-create-roster');
+    const btnList = document.getElementById('btn-list-rosters');
+    const btnLoad = document.getElementById('btn-load-roster');
+    const savedSection = document.querySelector('#roster .section:nth-of-type(1)');
+
+    // Carica elenco al primo accesso
     loadRostersList();
+
+    if (btnCreate && !btnCreate.dataset.bound) {
+        btnCreate.addEventListener('click', () => {
+            // Reset stato corrente e prepara dialog
+            appState.currentRoster = [];
+            const nameInput = document.getElementById('roster-name-dialog');
+            if (nameInput) nameInput.value = '';
+            generateRosterFormIn('roster-form-dialog');
+            setLoadRosterEnabled(false);
+            openDialog('roster-dialog');
+
+            const btnSave = document.getElementById('save-roster-dialog');
+            const btnClear = document.getElementById('clear-roster-dialog');
+            if (btnSave && !btnSave.dataset.bound) {
+                btnSave.addEventListener('click', saveCurrentRosterFromDialog);
+                btnSave.dataset.bound = '1';
+            }
+            if (btnClear && !btnClear.dataset.bound) {
+                btnClear.addEventListener('click', () => clearRosterIn('roster-form-dialog'));
+                btnClear.dataset.bound = '1';
+            }
+        });
+        btnCreate.dataset.bound = '1';
+    }
+
+    if (btnList && !btnList.dataset.bound) {
+        btnList.addEventListener('click', () => {
+            loadRostersList();
+            if (savedSection) savedSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+        });
+        btnList.dataset.bound = '1';
+    }
+
+    if (btnLoad && !btnLoad.dataset.bound) {
+        btnLoad.addEventListener('click', () => {
+            updatePlayersGrid();
+            alert('Roster caricato per lo scouting. Vai alla scheda "Start-Scouting" per iniziare.');
+        });
+        btnLoad.dataset.bound = '1';
+    }
 }
 
-function generateRosterForm() {
-    const container = document.getElementById('roster-form');
+function generateRosterFormIn(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     const roles = ['Palleggiatore', 'Opposto', 'Schiacciatore', 'Centrale', 'Libero'];
-    
+
     let html = '<div class="player-row player-header" style="font-weight: bold; background: #e3f2fd;">';
     html += '<div>N°</div><div>Nome</div><div>Cognome</div><div>Ruolo</div><div>Soprannome</div><div></div>';
     html += '</div>';
-    
+
     for (let i = 0; i < 16; i++) {
         html += `
             <div class="player-row">
@@ -285,80 +328,73 @@ function generateRosterForm() {
                     ${roles.map(role => `<option value="${role}">${role}</option>`).join('')}
                 </select>
                 <input type="text" placeholder="Soprannome" data-field="nickname" data-index="${i}">
-                <button type="button" class="btn btn-danger" onclick="clearPlayer(${i})" style="padding: 0.3rem;">×</button>
+                <button type="button" class="btn btn-danger" onclick="clearPlayerIn(${i}, '${containerId}')" style="padding: 0.3rem;">×</button>
             </div>
         `;
     }
-    
+
     container.innerHTML = html;
-    
-    // Aggiungi event listeners
+
+    // Event listeners per aggiornare lo stato del roster dal container
     container.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('input', updateRosterState);
+        input.addEventListener('input', () => updateRosterStateFrom(containerId));
     });
 }
 
-function updateRosterState() {
+function updateRosterStateFrom(containerId) {
+    const root = document.getElementById(containerId);
+    if (!root) return;
+
     const players = [];
-    
     for (let i = 0; i < 16; i++) {
-        const number = document.querySelector(`[data-field="number"][data-index="${i}"]`).value;
-        const name = document.querySelector(`[data-field="name"][data-index="${i}"]`).value;
-        const surname = document.querySelector(`[data-field="surname"][data-index="${i}"]`).value;
-        const role = document.querySelector(`[data-field="role"][data-index="${i}"]`).value;
-        const nickname = document.querySelector(`[data-field="nickname"][data-index="${i}"]`).value;
-        
+        const number = (root.querySelector(`[data-field="number"][data-index="${i}"]`) || {}).value || '';
+        const name = (root.querySelector(`[data-field="name"][data-index="${i}"]`) || {}).value || '';
+        const surname = (root.querySelector(`[data-field="surname"][data-index="${i}"]`) || {}).value || '';
+        const role = (root.querySelector(`[data-field="role"][data-index="${i}"]`) || {}).value || '';
+        const nickname = (root.querySelector(`[data-field="nickname"][data-index="${i}"]`) || {}).value || '';
         if (number || name || surname || role || nickname) {
             players[i] = { number, name, surname, role, nickname };
         }
     }
-    
     appState.currentRoster = players;
 }
 
-function clearPlayer(index) {
-    document.querySelector(`[data-field="number"][data-index="${index}"]`).value = '';
-    document.querySelector(`[data-field="name"][data-index="${index}"]`).value = '';
-    document.querySelector(`[data-field="surname"][data-index="${index}"]`).value = '';
-    document.querySelector(`[data-field="role"][data-index="${index}"]`).value = '';
-    document.querySelector(`[data-field="nickname"][data-index="${index}"]`).value = '';
-    updateRosterState();
+function clearPlayerIn(index, containerId) {
+    const root = document.getElementById(containerId);
+    if (!root) return;
+    const q = sel => root.querySelector(sel);
+    const f = field => q(`[data-field="${field}"][data-index="${index}"]`);
+    ['number','name','surname','role','nickname'].forEach(key => { const el = f(key); if (el) el.value = ''; });
+    updateRosterStateFrom(containerId);
 }
 
-function clearRoster() {
-    if (confirm('Sei sicuro di voler pulire tutto il roster?')) {
-        for (let i = 0; i < 16; i++) {
-            clearPlayer(i);
-        }
-        document.getElementById('roster-name').value = '';
-    }
+function clearRosterIn(containerId) {
+    for (let i = 0; i < 16; i++) clearPlayerIn(i, containerId);
+    const nameInput = document.getElementById('roster-name-dialog');
+    if (nameInput) nameInput.value = '';
 }
 
-function saveCurrentRoster() {
-    const rosterName = document.getElementById('roster-name').value.trim();
-    
-    if (!rosterName) {
-        alert('Inserisci un nome per il roster');
-        return;
-    }
-    
-    const validPlayers = appState.currentRoster.filter(p => p && (p.number || p.name || p.surname));
-    
-    if (validPlayers.length === 0) {
-        alert('Inserisci almeno un giocatore');
-        return;
-    }
-    
+function saveCurrentRosterFromDialog() {
+    const rosterName = (document.getElementById('roster-name-dialog') || {}).value?.trim();
+    if (!rosterName) { alert('Inserisci un nome per il roster'); return; }
+
+    // Assicurati che lo stato sia aggiornato
+    updateRosterStateFrom('roster-form-dialog');
+
+    const validPlayers = (appState.currentRoster || []).filter(p => p && (p.number || p.name || p.surname));
+    if (validPlayers.length === 0) { alert('Inserisci almeno un giocatore'); return; }
+
     const roster = {
         id: Date.now(),
         name: rosterName,
         players: appState.currentRoster,
         date: new Date().toLocaleDateString('it-IT')
     };
-    
+
     saveRoster(roster);
     loadRostersList();
-    
+    setLoadRosterEnabled(true);
+    closeDialog('roster-dialog');
     alert(`Roster "${rosterName}" salvato con successo!`);
 }
 
@@ -412,18 +448,20 @@ function loadRoster(rosterId) {
     
     if (roster) {
         appState.currentRoster = roster.players;
-        document.getElementById('roster-name').value = roster.name;
+        const nameInput = document.getElementById('roster-name');
+        if (nameInput) nameInput.value = roster.name; // se presente nel vecchio form
         
-        // Popola il form
+        // Popola il form classico se esiste
         for (let i = 0; i < 16; i++) {
             const player = roster.players[i] || {};
-            document.querySelector(`[data-field="number"][data-index="${i}"]`).value = player.number || '';
-            document.querySelector(`[data-field="name"][data-index="${i}"]`).value = player.name || '';
-            document.querySelector(`[data-field="surname"][data-index="${i}"]`).value = player.surname || '';
-            document.querySelector(`[data-field="role"][data-index="${i}"]`).value = player.role || '';
-            document.querySelector(`[data-field="nickname"][data-index="${i}"]`).value = player.nickname || '';
+            const n = document.querySelector(`[data-field="number"][data-index="${i}"]`); if (n) n.value = player.number || '';
+            const na = document.querySelector(`[data-field="name"][data-index="${i}"]`); if (na) na.value = player.name || '';
+            const su = document.querySelector(`[data-field="surname"][data-index="${i}"]`); if (su) su.value = player.surname || '';
+            const ro = document.querySelector(`[data-field="role"][data-index="${i}"]`); if (ro) ro.value = player.role || '';
+            const ni = document.querySelector(`[data-field="nickname"][data-index="${i}"]`); if (ni) ni.value = player.nickname || '';
         }
         
+        setLoadRosterEnabled(true);
         alert(`Roster "${roster.name}" caricato con successo!`);
     }
 }
@@ -471,14 +509,32 @@ function initializeScoutingPage() {
 function openDialog(dialogId) {
     const dialog = document.getElementById(dialogId);
     if (dialog) {
-        dialog.showModal();
+        try {
+            if (typeof dialog.showModal === 'function') {
+                dialog.showModal();
+            } else {
+                // Fallback se showModal non è supportato
+                dialog.setAttribute('open', 'open');
+            }
+        } catch (e) {
+            // Ulteriore fallback in caso di eccezioni
+            dialog.setAttribute('open', 'open');
+        }
     }
 }
 
 function closeDialog(dialogId) {
     const dialog = document.getElementById(dialogId);
     if (dialog) {
-        dialog.close();
+        try {
+            if (typeof dialog.close === 'function') {
+                dialog.close();
+            } else {
+                dialog.removeAttribute('open');
+            }
+        } catch (e) {
+            dialog.removeAttribute('open');
+        }
     }
 }
 
@@ -1197,5 +1253,21 @@ function fitActivePageToViewport() {
         }
     } catch (e) {
         console.warn('fitActivePageToViewport error:', e);
+    }
+}
+
+
+// Gestione abilitazione pulsante "Carica Roster"
+function setLoadRosterEnabled(enabled) {
+    const btnLoad = document.getElementById('btn-load-roster');
+    if (!btnLoad) return;
+    if (enabled) {
+        btnLoad.removeAttribute('disabled');
+        btnLoad.classList.remove('is-disabled');
+        btnLoad.setAttribute('aria-disabled', 'false');
+    } else {
+        btnLoad.setAttribute('disabled', '');
+        btnLoad.classList.add('is-disabled');
+        btnLoad.setAttribute('aria-disabled', 'true');
     }
 }
