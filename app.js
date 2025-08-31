@@ -287,6 +287,21 @@ function initializeRosterPage() {
                 btnClear.addEventListener('click', () => clearRosterIn('roster-form-dialog'));
                 btnClear.dataset.bound = '1';
             }
+            const btnImport = document.getElementById('import-roster-dialog');
+            const btnExport = document.getElementById('export-roster-dialog');
+            const fileInput = document.getElementById('import-roster-file');
+            if (btnImport && !btnImport.dataset.bound) {
+                btnImport.addEventListener('click', () => fileInput && fileInput.click());
+                btnImport.dataset.bound = '1';
+            }
+            if (fileInput && !fileInput.dataset.bound) {
+                fileInput.addEventListener('change', (e) => importRosterFromFile(e.target.files && e.target.files[0]));
+                fileInput.dataset.bound = '1';
+            }
+            if (btnExport && !btnExport.dataset.bound) {
+                btnExport.addEventListener('click', exportCurrentRosterToFile);
+                btnExport.dataset.bound = '1';
+            }
         });
         btnCreate.dataset.bound = '1';
     }
@@ -1270,4 +1285,65 @@ function setLoadRosterEnabled(enabled) {
         btnLoad.classList.add('is-disabled');
         btnLoad.setAttribute('aria-disabled', 'true');
     }
+}
+
+
+function exportCurrentRosterToFile() {
+    // Assicurati che lo stato sia aggiornato
+    updateRosterStateFrom('roster-form-dialog');
+    const rosterName = (document.getElementById('roster-name-dialog') || {}).value?.trim() || 'Roster';
+    const players = appState.currentRoster || [];
+    const valid = players.some(p => p && (p.number || p.name || p.surname || p.role || p.nickname));
+    if (!valid) { alert('Nessun dato da esportare'); return; }
+
+    const payload = {
+        name: rosterName,
+        players: players,
+        exportedAt: new Date().toISOString(),
+        format: 'my-volley-scout.roster.v1'
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = rosterName.replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) || 'Roster';
+    a.download = `${safeName}.roster.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+function importRosterFromFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const text = reader.result;
+            const data = JSON.parse(text);
+            const isValid = data && Array.isArray(data.players);
+            if (!isValid) throw new Error('Formato file non valido');
+            // Nome
+            const nameInput = document.getElementById('roster-name-dialog');
+            if (nameInput) nameInput.value = (data.name || '').toString();
+            // Popola 16 righe
+            for (let i = 0; i < 16; i++) {
+                const player = (data.players && data.players[i]) || {};
+                const n = document.querySelector(`#roster-form-dialog [data-field="number"][data-index="${i}"]`); if (n) n.value = player.number || '';
+                const na = document.querySelector(`#roster-form-dialog [data-field="name"][data-index="${i}"]`); if (na) na.value = player.name || '';
+                const su = document.querySelector(`#roster-form-dialog [data-field="surname"][data-index="${i}"]`); if (su) su.value = player.surname || '';
+                const ro = document.querySelector(`#roster-form-dialog [data-field="role"][data-index="${i}"]`); if (ro) ro.value = player.role || '';
+                const ni = document.querySelector(`#roster-form-dialog [data-field="nickname"][data-index="${i}"]`); if (ni) ni.value = player.nickname || '';
+            }
+            // Aggiorna stato
+            updateRosterStateFrom('roster-form-dialog');
+            setLoadRosterEnabled(true);
+            alert('Roster importato con successo!');
+        } catch (e) {
+            console.error(e);
+            alert('Impossibile importare il file selezionato. Verifica che sia un JSON valido del roster.');
+        }
+    };
+    reader.onerror = () => alert('Errore lettura file.');
+    reader.readAsText(file, 'utf-8');
 }
