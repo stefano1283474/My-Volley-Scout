@@ -497,6 +497,10 @@ body {
 
 /* ... existing code ... */
 
+/* Force-hide sections when toggled as tabs */
+#new-match-section.hidden { display: none !important; }
+#matches-list-section.hidden { display: none !important; }
+
 /* --- Override Match-Data: pulsanti in riga e scroll sotto al titolo --- */
 #match-data .match-actions {
   display: flex;

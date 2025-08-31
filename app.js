@@ -114,15 +114,14 @@ function initializeMatchDataPage() {
             inactiveBtn.setAttribute('aria-selected', 'false');
         };
         const showNewTab = () => {
-            newMatchSection.style.display = 'block';
-            matchesListSection.style.display = 'none';
+            newMatchSection.classList.remove('hidden');
+            matchesListSection.classList.add('hidden');
             activateTabs(newMatchBtn, loadMatchesBtn);
-            // Ricalcola layout e altezze di scroll
             setTimeout(() => fitActivePageToViewport(), 0);
         };
         const showListTab = () => {
-            newMatchSection.style.display = 'none';
-            matchesListSection.style.display = 'block';
+            newMatchSection.classList.add('hidden');
+            matchesListSection.classList.remove('hidden');
             activateTabs(loadMatchesBtn, newMatchBtn);
             loadMatchesList();
             setTimeout(() => fitActivePageToViewport(), 0);
