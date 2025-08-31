@@ -212,21 +212,17 @@ function loadMatchesList() {
     }
     
     container.innerHTML = matches.map(match => {
-        // Gestisce sia il formato vecchio che quello nuovo
+        // manteniamo compatibilità con eventuali vecchi campi
         const myTeam = match.myTeam || 'Team non specificato';
-        const homeAway = match.homeAway;
-        let teamInfo = '';
-        
-        if (homeAway) {
-            teamInfo = ` - Il mio Team: ${myTeam} (${homeAway === 'home' ? 'Casa' : 'Trasferta'})`;
-        }
+        const homeAway = match.homeAway; // non visualizzato nelle 4 righe richieste
+        const matchType = match.matchType || '-';
+        const matchDate = match.date || '-';
         
         return `
             <div class="match-item">
-                <div class="match-info">
-                    <div class="match-title">${match.homeTeam} vs ${match.awayTeam}</div>
-                    <div class="match-details">${match.matchType} - ${match.date}${teamInfo}</div>
-                </div>
+                <div class="match-title">${match.homeTeam} vs ${match.awayTeam}</div>
+                <div class="match-details">${matchType}</div>
+                <div class="match-details">${matchDate}</div>
                 <div class="match-actions">
                     <button class="btn btn-primary" onclick="loadMatch(${match.id})">Carica</button>
                     <button class="btn btn-danger" onclick="deleteMatch(${match.id})">Elimina</button>
@@ -274,7 +270,7 @@ function generateRosterForm() {
     const container = document.getElementById('roster-form');
     const roles = ['Palleggiatore', 'Opposto', 'Schiacciatore', 'Centrale', 'Libero'];
     
-    let html = '<div class="player-row" style="font-weight: bold; background: #e3f2fd;">';
+    let html = '<div class="player-row player-header" style="font-weight: bold; background: #e3f2fd;">';
     html += '<div>N°</div><div>Nome</div><div>Cognome</div><div>Ruolo</div><div>Soprannome</div><div></div>';
     html += '</div>';
     
