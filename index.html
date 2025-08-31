@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Volley Scout PWA</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1">
     <meta name="theme-color" content="#2196F3">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
 </head>
@@ -25,9 +25,13 @@
         <main class="main">
             <!-- Match-Data Page -->
             <div id="match-data" class="page active">
-                <h2>Gestione Partite</h2>
                 
-                <div class="section">
+                <div class="match-actions">
+                    <button id="new-match-btn" class="btn btn-primary">Nuova Partita</button>
+                    <button id="load-matches-btn" class="btn btn-secondary">Carica Elenco Partite Precedenti</button>
+                </div>
+                
+                <div id="new-match-section" class="section" style="display: none;">
                     <h3>Nuova Partita</h3>
                     <form id="new-match-form" class="form">
                         <div class="form-group">
@@ -60,7 +64,7 @@
                     </form>
                 </div>
 
-                <div class="section">
+                <div id="matches-list-section" class="section" style="display: none;">
                     <h3>Partite Precedenti</h3>
                     <div id="matches-list" class="matches-list">
                         <!-- Lista partite caricate dinamicamente -->
@@ -70,7 +74,6 @@
 
             <!-- Roster Page -->
             <div id="roster" class="page">
-                <h2>Gestione Roster</h2>
                 
                 <div class="section">
                     <h3>Roster Salvati</h3>
@@ -95,7 +98,6 @@
 
             <!-- Scouting Page -->
             <div id="scouting" class="page">
-                <h2>Start Scouting</h2>
                 
                 <!-- Match Info Section -->
                 <div class="section" id="match-info-section" style="display: none;">
@@ -172,41 +174,44 @@
                         </div>
                     </div>
                     
-                    <div class="scouting-step" id="player-selection">
-                        <h3>Seleziona Giocatore</h3>
-                        <div class="players-grid" id="players-grid">
-                            <!-- I giocatori verranno caricati dinamicamente -->
+                    <dialog id="scouting-dialog" aria-modal="true" aria-label="Scouting Guidato">
+                        
+                        <div class="scouting-step" id="step-player">
+                            <h3>Seleziona Giocatore</h3>
+                            <div class="players-grid" id="players-grid">
+                                <!-- I giocatori verranno caricati dinamicamente -->
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="scouting-step" id="evaluation-selection">
-                        <h3>Seleziona Valutazione</h3>
-                        <div class="action-info">
-                            <p><strong>Giocatore:</strong> <span id="selected-player-info"></span></p>
-                            <p><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
+                        
+                        <div class="scouting-step" id="step-action">
+                            <h3>Seleziona Azione</h3>
+                            <div class="action-info">
+                                <p><strong>Giocatore:</strong> <span id="selected-player-info"></span></p>
+                                <p><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
+                            </div>
+                            <div class="evaluation-buttons">
+                                <button class="eval-btn" onclick="selectEvaluation(1)">1 - Errore</button>
+                                <button class="eval-btn" onclick="selectEvaluation(2)">2 - Negativo</button>
+                                <button class="eval-btn" onclick="selectEvaluation(3)">3 - Neutro</button>
+                                <button class="eval-btn" onclick="selectEvaluation(4)">4 - Positivo</button>
+                                <button class="eval-btn" onclick="selectEvaluation(5)">5 - Punto</button>
+                            <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
+                            </div>
+                            <button class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
                         </div>
-                        <div class="evaluation-buttons">
-                            <button class="eval-btn" onclick="selectEvaluation(1)">1 - Errore</button>
-                            <button class="eval-btn" onclick="selectEvaluation(2)">2 - Negativo</button>
-                            <button class="eval-btn" onclick="selectEvaluation(3)">3 - Neutro</button>
-                            <button class="eval-btn" onclick="selectEvaluation(4)">4 - Positivo</button>
-                            <button class="eval-btn" onclick="selectEvaluation(5)">5 - Punto</button>
-                        <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
+                        
+                        
+                        
+                        <div id="actions-log" class="actions-log">
+                            <h4>Log Azioni</h4>
+                            <div id="actions-list"></div>
                         </div>
-                        <button class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
-                    </div>
-                    
-                    
-                    
-                    <div id="actions-log" class="actions-log">
-                        <h4>Log Azioni</h4>
-                        <div id="actions-list"></div>
-                    </div>
+                    </dialog>
                 </div>
             </div>
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=1"></script>
 </body>
 </html>

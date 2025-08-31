@@ -10,11 +10,17 @@ body {
     background-color: #f5f5f5;
     color: #333;
     line-height: 1.6;
+    font-size: 16px; /* Aumentato per mobile */
+    /* Migliore gestione altezza viewport su mobile */
+    min-height: 100vh; /* fallback */
+    min-height: 100dvh; /* usa altezza dinamica se supportata */
 }
 
 /* Layout principale */
 #app {
     min-height: 100vh;
+    /* preferisci unità dinamiche quando disponibili */
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
@@ -29,8 +35,8 @@ body {
 
 .header h1 {
     text-align: center;
-    margin-bottom: 1rem;
-    font-size: 1.8rem;
+    margin-bottom: 1.5rem; /* Aumentato */
+    font-size: 2.2rem; /* Aumentato */
     font-weight: 300;
 }
 
@@ -39,19 +45,22 @@ body {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
 }
 
 .nav-btn {
     background: rgba(255,255,255,0.2);
     border: 2px solid rgba(255,255,255,0.3);
     color: white;
-    padding: 0.7rem 1.2rem;
+    padding: 0.8rem 1rem; /* Ridotto per mobile */
     border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 0.9rem;
+    font-size: 1rem; /* Ridotto */
     font-weight: 500;
+    flex: 1 1 auto;
+    min-width: 100px;
 }
 
 .nav-btn:hover {
@@ -72,6 +81,8 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+    /* Evita overflow in layout flex nelle pagine alte */
+    min-height: 0;
 }
 
 /* Pages */
@@ -91,9 +102,9 @@ body {
 
 .page h2 {
     color: #2196F3;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem; /* Aumentato */
     text-align: center;
-    font-size: 2rem;
+    font-size: 2.5rem; /* Aumentato */
     font-weight: 300;
 }
 
@@ -136,10 +147,10 @@ body {
 
 .form-group input,
 .form-group select {
-    padding: 0.8rem;
+    padding: 1rem; /* Aumentato */
     border: 2px solid #e0e0e0;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 1.2rem; /* Aumentato */
     transition: border-color 0.3s ease;
 }
 
@@ -252,7 +263,7 @@ body {
 
 .player-row {
     display: grid;
-    grid-template-columns: 80px 1fr 1fr 120px 1fr 60px;
+    grid-template-columns: 80px 0.8fr 1fr 120px 0.8fr 60px;
     gap: 0.5rem;
     align-items: center;
     padding: 0.5rem;
@@ -630,23 +641,14 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .main {
-        padding: 1rem 0.5rem;
-    }
-    
-    .section {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
     .player-row {
-        grid-template-columns: 60px 1fr 1fr;
-        gap: 0.3rem;
+        grid-template-columns: 60px 0.8fr 0.8fr;
+        gap: 0.2rem;
     }
     
     .action-input {
         grid-template-columns: 1fr;
-        gap: 0.5rem;
+        gap: 0.3rem;
     }
     
     .set-config {
@@ -654,37 +656,36 @@ body {
     }
     
     .players-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.3rem;
     }
     
     .player-btn {
-        min-height: 70px;
-        padding: 0.6rem;
+        min-height: 50px;
+        padding: 0.4rem;
     }
     
     .evaluation-buttons {
         grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-    
-    .eval-btn {
-        padding: 0.8rem;
-        font-size: 0.9rem;
-    }
-    
-    .scouting-step {
-        padding: 1rem;
-    }
-    
-    .nav {
-        flex-direction: column;
         gap: 0.3rem;
     }
     
-    .nav-btn {
-        padding: 0.6rem 1rem;
+    .eval-btn {
+        padding: 0.5rem;
         font-size: 0.8rem;
+    }
+    
+    .scouting-step {
+        padding: 0.5rem;
+    }
+    
+    .nav {
+        gap: 0.2rem;
+    }
+    
+    .nav-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
     }
 }
 
@@ -704,3 +705,102 @@ body {
 .mt-1 { margin-top: 0.5rem; }
 .mt-2 { margin-top: 1rem; }
 .mt-3 { margin-top: 1.5rem; }
+
+@media (max-width: 1080px) { /* Adattato per 1080p portrait */
+    .main {
+        padding: 1rem 0.5rem;
+    }
+    
+    .section {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .nav {
+        gap: 0.5rem;
+    }
+    
+    .form {
+        gap: 1rem;
+    }
+    
+    .players-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Aumentato per touch */
+        gap: 0.5rem;
+    }
+    
+    .player-btn {
+        padding: 0.8rem;
+        min-height: 80px;
+        font-size: 1rem;
+    }
+    
+    .evaluation-buttons {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .eval-btn {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+    }
+    /* Aggiunte per layout verticale */
+    .set-config {
+        grid-template-columns: 1fr;
+    }
+    .scouting-info {
+        grid-template-columns: 1fr;
+    }
+    
+}
+
+/* Modalità ultra compatta per schermi molto pieni */
+.page.ultra-compact h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+.page.ultra-compact .section { padding: 0.5rem; margin-bottom: 0.5rem; }
+.page.ultra-compact .form { gap: 0.4rem; }
+.page.ultra-compact .form-group label { font-size: 0.75rem; }
+.page.ultra-compact .form-group input,
+.page.ultra-compact .form-group select { padding: 0.45rem; font-size: 0.85rem; }
+.page.ultra-compact .btn { padding: 0.45rem 0.6rem; font-size: 0.75rem; }
+.page.ultra-compact .players-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.35rem; }
+.page.ultra-compact .player-btn { min-height: 56px; padding: 0.45rem; }
+.page.ultra-compact .evaluation-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.35rem; }
+.page.ultra-compact .eval-btn { padding: 0.45rem; font-size: 0.75rem; }
+.page.ultra-compact .score { font-size: 1.4rem; }
+.page.ultra-compact .current-info { font-size: 0.85rem; }
+.page.ultra-compact .match-info-display { padding: 0.6rem; }
+.page.ultra-compact .action-input-field { padding: 0.45rem; font-size: 0.8rem; }
+.page.ultra-compact .roster-grid { gap: 0.45rem; }
+.page.ultra-compact .player-row { grid-template-columns: 50px 1fr 1fr; gap: 0.25rem; }
+
+/* Compattazione globale per header/nav quando necessario */
+body.compact-global .header { padding: 0.6rem 0.5rem; }
+body.compact-global .header h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+body.compact-global .nav { gap: 0.3rem; }
+body.compact-global .nav-btn { min-width: 80px; padding: 0.45rem 0.6rem; font-size: 0.8rem; border-radius: 20px; }
+
+/* Assicura che il dialog rientri sempre nella viewport */
+dialog#scouting-dialog { max-height: 80vh; max-height: 80dvh; overflow: auto; }
+
+/* Forza layout orizzontale per i tre campi di Configurazione Set */
+.set-config {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: nowrap; /* mantieni i 3 elementi sulla stessa riga */
+}
+.set-config .form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-width: 0;
+}
+.set-config .form-group select,
+.set-config .form-group input {
+    width: 100%;
+}
+/* Il bottone può restare sulla stessa riga se c'è spazio */
+#set-config #start-set,
+.set-config #start-set {
+    flex: 0 0 auto;
+}

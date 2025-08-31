@@ -1,3 +1,5 @@
+console.log('app.js loaded');
+
 // Stato globale dell'applicazione
 const appState = {
     currentPage: 'match-data',
@@ -18,16 +20,21 @@ const rotationSequence = ['P1', 'P6', 'P5', 'P4', 'P3', 'P2'];
 
 // Inizializzazione dell'app
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM fully loaded');
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => registration.unregister());
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered:', reg.scope))
+                .catch(err => console.warn('Service Worker registration failed:', err));
         });
     }
     initializeApp();
     loadStoredData();
+    console.log('initializeApp called');
 });
 
 function initializeApp() {
+    console.log('initializeApp started');
     // Gestione navigazione
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
@@ -37,10 +44,15 @@ function initializeApp() {
         });
     });
 
-    // Inizializzazione pagine
+    // Inizializza pagine
     initializeMatchDataPage();
     initializeRosterPage();
     initializeScoutingPage();
+
+    // Adatta la pagina alla viewport all'avvio e su resize
+    requestAnimationFrame(fitActivePageToViewport);
+    window.addEventListener('resize', fitActivePageToViewport);
+    console.log('initializeApp completed');
 }
 
 function switchPage(pageId) {
@@ -59,11 +71,18 @@ function switchPage(pageId) {
         initializeMatchDataPage();
     } else if (pageId === 'scouting') {
         updateMatchInfo();
+        // Non aprire il dialog qui; verrà aperto solo dopo l'avvio del set
+        const dlg = document.getElementById('scouting-dialog');
+        if (dlg && dlg.open) dlg.close();
     }
+
+    // Adatta layout alla viewport dopo il cambio pagina
+    fitActivePageToViewport();
 }
 
 // === MATCH DATA PAGE ===
 function initializeMatchDataPage() {
+    console.log('Initializing Match Data Page');
     const form = document.getElementById('new-match-form');
     if (form && !form.hasAttribute('data-initialized')) {
         form.addEventListener('submit', handleNewMatch);
@@ -71,7 +90,42 @@ function initializeMatchDataPage() {
     }
     
     loadMatchesList();
-}
+
+    // Gestione nuovi pulsanti
+    const newMatchBtn = document.getElementById('new-match-btn');
+    const loadMatchesBtn = document.getElementById('load-matches-btn');
+    const newMatchSection = document.getElementById('new-match-section');
+    const matchesListSection = document.getElementById('matches-list-section');
+
+    console.log('newMatchBtn:', newMatchBtn);
+    console.log('loadMatchesBtn:', loadMatchesBtn);
+    console.log('newMatchSection:', newMatchSection);
+    console.log('matchesListSection:', matchesListSection);
+
+    if (newMatchBtn && loadMatchesBtn && newMatchSection && matchesListSection) {
+        newMatchBtn.addEventListener('click', () => {
+    console.log('New Match button clicked');
+    newMatchSection.style.display = 'block';
+    matchesListSection.style.display = 'none';
+ });
+
+            loadMatchesBtn.addEventListener('click', () => {
+    console.log('Load Matches button clicked');
+    newMatchSection.style.display = 'none';
+    matchesListSection.style.display = 'block';
+    loadMatchesList(); // Refresh lista
+ });
+            console.log('Listeners added to buttons');
+            console.log('Button listeners successfully added');
+
+            // Mostra di default la sezione "Nuova Partita"
+            newMatchSection.style.display = 'block';
+            matchesListSection.style.display = 'none';
+        } else {
+            console.log('Some elements not found');
+        }
+    }
+
 
 function handleNewMatch(e) {
     e.preventDefault();
@@ -418,12 +472,26 @@ function initializeScoutingPage() {
     }
 }
 
+function openDialog(dialogId) {
+    const dialog = document.getElementById(dialogId);
+    if (dialog) {
+        dialog.showModal();
+    }
+}
+
+function closeDialog(dialogId) {
+    const dialog = document.getElementById(dialogId);
+    if (dialog) {
+        dialog.close();
+    }
+}
+
 function initializeGuidedScouting() {
     // Event listeners per interfaccia guidata
     const backBtn = document.getElementById('back-to-player');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
-            showScoutingStep('player-selection');
+            showScoutingStep('step-player');
         });
     }
     
@@ -435,6 +503,8 @@ function initializeGuidedScouting() {
             submitGuidedAction(evaluation);
         });
     });
+    
+    // Non aprire automaticamente il dialog; verrà aperto quando l'utente entra nella pagina Scouting
 }
 
 function showScoutingStep(stepId) {
@@ -492,7 +562,7 @@ function selectPlayer(number, name) {
     updateNextFundamental();
     
     // Passa alla selezione della valutazione
-    showScoutingStep('evaluation-selection');
+    showScoutingStep('step-action');
 }
 
 function selectEvaluation(evaluation) {
@@ -562,7 +632,7 @@ function submitGuidedAction() {
     updatePlayersGrid();
     
     // Torna alla selezione giocatore
-    showScoutingStep('player-selection');
+    showScoutingStep('step-player');
     
     // Reset selezione
     appState.selectedPlayer = null;
@@ -751,7 +821,10 @@ function startSet() {
     updateCurrentPhaseDisplay();
     updateNextFundamental();
     updatePlayersGrid();
-    showScoutingStep('player-selection');
+    
+    // Apri l'interfaccia guidata e mostra il primo step (selezione giocatore)
+    showScoutingStep('step-player');
+    openDialog('scouting-dialog');
     
     alert(`Set ${setNumber} iniziato! Rotazione: ${rotation}, Fase: ${phase}`);
 }
@@ -981,4 +1054,152 @@ function checkSetEnd() {
 function loadStoredData() {
     // Carica dati salvati se necessario
     console.log('App inizializzata e dati caricati');
+}
+
+
+function fitActivePageToViewport() {
+    try {
+        const vh = window.innerHeight;
+        const header = document.querySelector('.header');
+        const nav = document.querySelector('.nav');
+        const activePage = document.querySelector('.page.active');
+        const main = document.querySelector('.main');
+        if (!activePage || !main) return;
+
+        const headerH = header ? header.offsetHeight : 0;
+        const mainPaddingTop = parseFloat(getComputedStyle(main).paddingTop) || 0;
+        const mainPaddingBottom = parseFloat(getComputedStyle(main).paddingBottom) || 0;
+        const available = vh - headerH - mainPaddingTop - mainPaddingBottom;
+
+        // Applica altezza massima alla pagina attiva
+        activePage.style.maxHeight = available + 'px';
+        // Il contenitore pagina non deve scrollare verticalmente
+        activePage.style.overflow = 'hidden';
+
+        // Solo la lista partite deve scrollare quando visibile
+        if (activePage.id === 'match-data') {
+            const listSection = document.getElementById('matches-list-section');
+            const list = document.getElementById('matches-list');
+            if (listSection && list) {
+                const visible = getComputedStyle(listSection).display !== 'none';
+                if (visible) {
+                    const listTop = list.getBoundingClientRect().top;
+                    // Spazio disponibile dal top della lista al fondo della viewport
+                    const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
+                    list.style.maxHeight = listAvailable + 'px';
+                    list.style.overflowY = 'auto';
+                    list.style.overflowX = 'hidden';
+                } else {
+                    list.style.maxHeight = '';
+                    list.style.overflowY = '';
+                    list.style.overflowX = '';
+                }
+            }
+        }
+
+        // Roster: scroll solo sulla griglia dei giocatori
+        if (activePage.id === 'roster') {
+            const grid = document.getElementById('roster-form');
+            if (grid) {
+                const gridTop = grid.getBoundingClientRect().top;
+                const gridAvailable = Math.max(0, window.innerHeight - gridTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
+                grid.style.maxHeight = gridAvailable + 'px';
+                grid.style.overflowY = 'auto';
+                grid.style.overflowX = 'hidden';
+            }
+        }
+        
+        // Comprimi sezioni non essenziali se superano l’altezza disponibile
+        activePage.classList.remove('compact', 'ultra-compact');
+        document.body.classList.remove('compact-global');
+
+        // Se il contenuto complessivo eccede, comprimi progressivamente
+        const exceeds = activePage.scrollHeight > available;
+        if (exceeds) {
+            document.body.classList.add('compact-global');
+            activePage.classList.add('compact');
+
+            // Dopo l'applicazione della classe, ricalcola e verifica se serve ulteriore compressione
+            requestAnimationFrame(() => {
+                if (activePage.scrollHeight > available) {
+                    activePage.classList.add('ultra-compact');
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('fitActivePageToViewport error:', e);
+    }
+}
+
+function fitActivePageToViewport() {
+    try {
+        const vh = window.innerHeight;
+        const header = document.querySelector('.header');
+        const main = document.querySelector('.main');
+        const activePage = document.querySelector('.page.active');
+        if (!activePage || !main) return;
+
+        const headerH = header ? header.offsetHeight : 0;
+        const mainStyles = getComputedStyle(main);
+        const mainPaddingTop = parseFloat(mainStyles.paddingTop) || 0;
+        const mainPaddingBottom = parseFloat(mainStyles.paddingBottom) || 0;
+        const available = vh - headerH - mainPaddingTop - mainPaddingBottom;
+
+        // Imposta un limite massimo di altezza alla pagina attiva
+        activePage.style.maxHeight = available + 'px';
+        // Il contenitore pagina non deve scrollare verticalmente
+        activePage.style.overflow = 'hidden';
+
+        // Solo la lista partite deve scrollare quando visibile
+        if (activePage.id === 'match-data') {
+            const listSection = document.getElementById('matches-list-section');
+            const list = document.getElementById('matches-list');
+            if (listSection && list) {
+                const visible = getComputedStyle(listSection).display !== 'none';
+                if (visible) {
+                    const listTop = list.getBoundingClientRect().top;
+                    const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
+                    list.style.maxHeight = listAvailable + 'px';
+                    list.style.overflowY = 'auto';
+                    list.style.overflowX = 'hidden';
+                } else {
+                    list.style.maxHeight = '';
+                    list.style.overflowY = '';
+                    list.style.overflowX = '';
+                }
+            }
+        }
+
+        // Roster: scroll solo sulla griglia dei giocatori
+        if (activePage.id === 'roster') {
+            const grid = document.getElementById('roster-form');
+            if (grid) {
+                const gridTop = grid.getBoundingClientRect().top;
+                const gridAvailable = Math.max(0, window.innerHeight - gridTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
+                grid.style.maxHeight = gridAvailable + 'px';
+                grid.style.overflowY = 'auto';
+                grid.style.overflowX = 'hidden';
+            }
+        }
+
+        // Reset classi di compattazione
+        activePage.classList.remove('compact', 'ultra-compact');
+        document.body.classList.remove('compact-global');
+
+        // Se il contenuto complessivo eccede, comprimi progressivamente
+        const exceeds = activePage.scrollHeight > available;
+        if (exceeds) {
+            document.body.classList.add('compact-global');
+            activePage.classList.add('compact');
+
+            // Dopo l'applicazione della classe, ricalcola e verifica se serve ulteriore compressione
+            requestAnimationFrame(() => {
+                if (activePage.scrollHeight > available) {
+                    activePage.classList.add('ultra-compact');
+                }
+            });
+        }
+    } catch (e) {
+        console.warn('fitActivePageToViewport error:', e);
+    }
 }
