@@ -332,14 +332,107 @@ body {
 #scouting .set-config .form-group label {
   margin-bottom: 4px;    /* compatta verticalmente il label sopra al select */
 }
+#scouting .set-config select { width: 100%; }
 
 /* (Opzionale) su schermi molto stretti, permettiamo il wrap in 2 colonne per evitare overflow */
 @media (max-width: 600px) {
   #scouting .set-config {
     grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 8px;
   }
   #scouting .set-config .form-group:nth-of-type(3) {
     grid-column: 1 / -1; /* la terza voce va a capo su schermi piccoli */
+  }
+}
+/* Extra piccolo: una colonna piena e pulsante full-width */
+@media (max-width: 420px) {
+  #scouting .set-config { grid-template-columns: 1fr; }
+  #scouting .set-config #start-set { width: 100%; justify-self: stretch; }
+}
+
+/* ===== Scouting page: ottimizzazione spazi, dimensioni, e scroll ===== */
+#match-info-section .match-info-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+#match-info-section .match-teams { font-size: 1.05rem; font-weight: 600; }
+#match-info-section .match-details { font-size: 0.9rem; color: #666; }
+
+#scouting-section .game-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#scouting-section .score { font-size: 1.4rem; font-weight: 700; }
+#scouting-section .current-info { font-size: 0.95rem; color: #444; }
+#scouting-section .scouting-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
+
+/* Dialog Scouting: adattabile e con scroll interno dove serve */
+#scouting-dialog::backdrop { background: rgba(0,0,0,0.3); }
+#scouting-dialog {
+  width: min(960px, 96vw);
+  max-width: 96vw;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+#scouting-dialog[open] {
+  position: fixed;
+  top: 2vh;
+  left: 50%;
+  transform: translateX(-50%);
+  max-height: 96vh;
+  overflow: hidden; /* il contenuto interno scorre */
+}
+#scouting-dialog .players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+#scouting-dialog .player-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+}
+#scouting-dialog .player-number { font-weight: 700; font-size: 1.1rem; }
+#scouting-dialog .actions-log { max-height: 40vh; overflow-y: auto; margin-top: 10px; padding-right: 4px; }
+
+@media (max-width: 480px) {
+  /* Compatta spazi su mobile e consenti adattamento pieno alla larghezza */
+  .main { padding: 1rem 0.75rem; }
+  .section { padding: 1rem; margin-bottom: 1rem; }
+  .section h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+  .form-group input, .form-group select { padding: 0.7rem; font-size: 1rem; }
+  .btn { padding: 0.7rem 1rem; font-size: 0.95rem; }
+
+  /* Dialog a piena larghezza/altezza su mobile */
+  #scouting-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 96vh;
+    max-height: 96vh;
+    border-radius: 0;
+    padding: 0.75rem;
+    left: 0;
+    transform: none;
   }
 }
 
