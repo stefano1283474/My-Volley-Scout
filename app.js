@@ -264,6 +264,10 @@ function initializeRosterPage() {
     const btnLoad = document.getElementById('btn-load-roster');
     const savedSection = document.querySelector('#roster .section:nth-of-type(1)');
 
+    // Nuovi controlli Import nella lista esterna
+    const importListBtn = document.getElementById('import-roster-list-btn');
+    const importListFile = document.getElementById('import-roster-list-file');
+
     // Carica elenco al primo accesso
     loadRostersList();
 
@@ -320,6 +324,16 @@ function initializeRosterPage() {
             alert('Roster caricato per lo scouting. Vai alla scheda "Start-Scouting" per iniziare.');
         });
         btnLoad.dataset.bound = '1';
+    }
+
+    // Bind import esterno (fuori dialog)
+    if (importListBtn && !importListBtn.dataset.bound) {
+        importListBtn.addEventListener('click', () => importListFile && importListFile.click());
+        importListBtn.dataset.bound = '1';
+    }
+    if (importListFile && !importListFile.dataset.bound) {
+        importListFile.addEventListener('change', (e) => importRosterFromListFile(e.target.files && e.target.files[0]));
+        importListFile.dataset.bound = '1';
     }
 }
 
@@ -449,6 +463,7 @@ function loadRostersList() {
                     <div class="roster-details">${playerCount} giocatori - ${roster.date}</div>
                 </div>
                 <div class="roster-actions">
+                    <button class="btn btn-secondary" onclick="exportRoster(${roster.id})">Esporta</button>
                     <button class="btn btn-primary" onclick="loadRoster(${roster.id})">Carica</button>
                     <button class="btn btn-danger" onclick="deleteRoster(${roster.id})">Elimina</button>
                 </div>
@@ -488,6 +503,58 @@ function deleteRoster(rosterId) {
         localStorage.setItem('volleyRosters', JSON.stringify(filtered));
         loadRostersList();
     }
+}
+
+// Esporta un roster dalla lista esterna
+function exportRoster(rosterId) {
+    const rosters = getStoredRosters();
+    const roster = rosters.find(r => r.id === rosterId);
+    if (!roster) { alert('Roster non trovato'); return; }
+    const payload = {
+        name: roster.name || 'Roster',
+        players: roster.players || [],
+        exportedAt: new Date().toISOString(),
+        format: 'my-volley-scout.roster.v1'
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeName = (roster.name || 'Roster').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) || 'Roster';
+    a.download = `${safeName}.roster.json`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+}
+
+// Importa un file JSON direttamente nella lista salvata (fuori dialog)
+function importRosterFromListFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const data = JSON.parse(reader.result);
+            if (!data || !Array.isArray(data.players)) throw new Error('Formato non valido');
+            const roster = {
+                id: Date.now(),
+                name: (data.name || 'Roster importato').toString(),
+                players: data.players,
+                date: new Date().toLocaleDateString('it-IT')
+            };
+            saveRoster(roster);
+            loadRostersList();
+            // imposta come roster corrente per abilitarne l'uso rapido
+            appState.currentRoster = data.players;
+            setLoadRosterEnabled(true);
+            alert(`Roster "${roster.name}" importato nella lista`);
+        } catch (e) {
+            console.error(e);
+            alert('Impossibile importare: il file non è un JSON roster valido.');
+        }
+    };
+    reader.onerror = () => alert('Errore lettura file.');
+    reader.readAsText(file, 'utf-8');
 }
 
 // === SCOUTING PAGE ===

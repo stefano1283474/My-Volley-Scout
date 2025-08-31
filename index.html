@@ -73,47 +73,42 @@
             </div>
 
             <!-- Roster Page -->
-            <div id="roster" class="page">
-                
-                <div class="roster-top-actions">
-                    <button id="btn-create-roster" class="btn btn-primary">Crea nuovo roster</button>
-                    <button id="btn-list-rosters" class="btn btn-secondary" aria-disabled="false">Elenco Roster</button>
-                    <button id="btn-load-roster" class="btn btn-primary" disabled aria-disabled="true">Carica Roster</button>
-                </div>
+            <div id="roster" class="page hidden">
                 
                 <div class="section">
-                    <h3>Roster Salvati</h3>
-                    <div id="saved-rosters" class="rosters-list">
-                        <!-- Lista roster caricata dinamicamente -->
+                    <div class="roster-top-actions match-actions">
+                        <button id="btn-create-roster" class="btn btn-primary">Crea Nuovo Roster</button>
+                        <button id="btn-list-rosters" class="btn btn-secondary">Elenco Roster</button>
+                        <button id="btn-load-roster" class="btn btn-secondary" disabled>Carica Roster</button>
                     </div>
                 </div>
-
-                <div class="section" style="display: none;">
-                    <h3>Nuovo/Modifica Roster</h3>
-                    <div class="roster-actions">
-                        <input type="text" id="roster-name" placeholder="Nome Roster" class="roster-name-input">
-                        <button id="save-roster" class="btn btn-primary">Salva Roster</button>
-                        <button id="clear-roster" class="btn btn-secondary">Pulisci</button>
-                    </div>
-                    
-                    <div id="roster-form" class="roster-grid">
-                        <!-- Griglia giocatori generata dinamicamente -->
-                    </div>
-                </div>
-
-                <dialog id="roster-dialog" aria-modal="true" aria-label="Crea nuovo roster">
-                    <form method="dialog" class="roster-dialog-form" id="roster-dialog-form">
-                        <h3>Crea Nuovo Roster</h3>
-                        <div class="roster-actions">
-                            <input type="text" id="roster-name-dialog" placeholder="Nome Roster" class="roster-name-input">
-                            <button id="save-roster-dialog" type="button" class="btn btn-primary">Salva Roster</button>
-                            <button id="clear-roster-dialog" type="button" class="btn btn-secondary">Pulisci</button>
-                            <button id="import-roster-dialog" type="button" class="btn btn-secondary">Importa</button>
-                            <button id="export-roster-dialog" type="button" class="btn btn-secondary">Esporta</button>
-                            <button id="close-roster-dialog" type="submit" class="btn btn-secondary">Chiudi</button>
-                            <input id="import-roster-file" type="file" accept="application/json,.json" style="display:none" />
+            
+                <!-- Elenco roster salvati -->
+                <div class="section">
+                    <div class="section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                        <h2 style="margin:0;">Roster Salvati</h2>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button id="import-roster-list-btn" class="btn btn-secondary">Importa JSON</button>
+                            <input type="file" id="import-roster-list-file" accept="application/json,.json" style="display:none" />
                         </div>
-                        <div id="roster-form-dialog" class="roster-grid"></div>
+                    </div>
+                    <div id="saved-rosters" class="list"></div>
+                </div>
+            
+                <!-- Dialog creazione/modifica roster -->
+                <dialog id="roster-dialog">
+                    <form method="dialog" class="dialog-form" id="roster-form-wrapper">
+                        <h3>Crea Nuovo Roster</h3>
+                        <input id="roster-name-dialog" type="text" placeholder="Nome Roster" />
+                        <div class="dialog-actions">
+                            <button type="button" id="save-roster-dialog" class="btn btn-primary">Salva Roster</button>
+                            <button type="button" id="clear-roster-dialog" class="btn" >Pulisci</button>
+                            <button type="button" id="export-roster-dialog" class="btn">Esporta</button>
+                            <button type="button" id="import-roster-dialog" class="btn">Importa</button>
+                            <input type="file" id="import-roster-file" accept="application/json,.json" style="display:none" />
+                            <button type="button" class="btn" onclick="closeDialog('roster-dialog')">Chiudi</button>
+                        </div>
+                        <div id="roster-form-dialog" class="roster-form"></div>
                     </form>
                 </dialog>
             </div>

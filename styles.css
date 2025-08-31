@@ -291,54 +291,54 @@ body {
   width: 100%;
 }
 
-/* Header roster sempre su una riga */
+/* Desktop/Tablet: header e righe su 6 colonne, una sola riga */
+.player-row,
 .player-row.player-header {
-  grid-template-columns: 56px minmax(0,1fr) minmax(0,1fr) minmax(120px,1fr) minmax(0,1fr) 36px;
-  grid-template-areas: none;
-}
-
-/* Righe giocatore su due righe */
-.player-row {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "num name surname"
-    "role nick delete";
-  gap: 0.5rem;
+  grid-template-columns: 56px minmax(0,1fr) minmax(0,1fr) minmax(120px,1fr) minmax(0,1fr) 36px;
   align-items: center;
-  width: 100%;
+  column-gap: 0.5rem;
+}
+/* Evita che i mapping per aree interferiscano su desktop */
+.player-row > * { grid-area: auto !important; }
+
+.player-row.player-header { font-weight: 600; background: #e3f2fd; }
+.player-row.player-header > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Mapping posizioni per mobile lo re-introduciamo nella media query */
+/* (Le seguenti regole originali vengono gestite solo su mobile) */
+
+/* Pulsante elimina compatto */
+.player-row .btn-danger { width: 36px; min-width: 36px; padding: 0.25rem; }
+
+/* Mobile stretto: 3 colonne x 2 righe per header e righe, coerenti tra loro */
+@media (max-width: 480px) {
+  .player-row,
+  .player-row.player-header {
+    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "num name surname"
+      "role nick delete";
+    row-gap: 0.4rem;
+    column-gap: 0.4rem;
+  }
+  /* Re-applica mapping delle aree solo su mobile */
+  .player-row > :nth-child(1) { grid-area: num !important; }
+  .player-row > :nth-child(2) { grid-area: name !important; }
+  .player-row > :nth-child(3) { grid-area: surname !important; }
+  .player-row > :nth-child(4) { grid-area: role !important; }
+  .player-row > :nth-child(5) { grid-area: nick !important; }
+  .player-row > :nth-child(6) { grid-area: delete !important; justify-self: end; }
+
+  .player-row .btn-danger { width: 28px; min-width: 28px; }
 }
 
-/* Posizionamento dei campi secondo l’ordine generato da app.js */
-.player-row > :nth-child(1) { grid-area: num; }
-.player-row > :nth-child(2) { grid-area: name; }
-.player-row > :nth-child(3) { grid-area: surname; }
-.player-row > :nth-child(4) { grid-area: role; }
-.player-row > :nth-child(5) { grid-area: nick; }
-.player-row > :nth-child(6) { grid-area: delete; justify-self: end; }
-
-/* Evita overflow */
+/* Evita overflow dei campi */
 .player-row input,
 .player-row select {
   width: 100%;
   min-width: 0;
-}
-
-/* Pulsante elimina compatto */
-.player-row .btn-danger {
-  width: 36px;
-  min-width: 36px;
-  padding: 0.25rem;
-}
-
-/* Mobile stretto */
-@media (max-width: 480px) {
-  .player-row {
-    grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
-    gap: 0.4rem;
-  }
-  .player-row .btn-danger { width: 28px; min-width: 28px; }
 }
 
 /* Utility: disporre i figli div su due righe */
@@ -429,3 +429,61 @@ body {
   filter: grayscale(20%);
   pointer-events: none; /* evita click su elementi disabilitati */
 }
+
+/* Gruppo azioni orizzontale stile tab (riuso per Match e Roster) */
+.match-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.match-actions .btn {
+  border-radius: 10px;
+}
+
+/* Lista generica */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Roster list items */
+.roster-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.roster-info {
+  min-width: 0;
+}
+.roster-title {
+  font-weight: 700;
+}
+.roster-details {
+  color: #666;
+  font-size: 0.9rem;
+}
+.roster-actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .match-actions { gap: 6px; }
+  .roster-item { flex-direction: column; align-items: stretch; }
+  .roster-actions { justify-content: flex-end; }
+}
+
+/* Dialog form layout */
+.dialog-form > h3 { margin-top: 0; }
+.dialog-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.roster-form { margin-top: 10px; }
+
+/* ... existing code ... */
