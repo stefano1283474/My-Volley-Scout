@@ -858,3 +858,42 @@ body {
 .dialog-form > h3 { margin-top: 0; }
 .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .roster-form { margin-top: 10px; }
+
+/* Match summary (sopra ai pulsanti) */
+.match-summary {
+  margin-bottom: 8px;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Data, Tipo affiancati */
+  gap: 8px 12px;
+}
+.summary-item {
+  background: #fafafa;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.summary-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 2px;
+}
+.summary-value {
+  font-weight: 600;
+  color: #222;
+}
+@media (max-width: 480px) {
+  .summary-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .match-actions { gap: 6px; }
+  .roster-item { flex-direction: column; align-items: stretch; }
+  .roster-actions { justify-content: flex-end; }
+}
+
+/* Dialog form layout */
+.dialog-form > h3 { margin-top: 0; }
+.dialog-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.roster-form { margin-top: 10px; }

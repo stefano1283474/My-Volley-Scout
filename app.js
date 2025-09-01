@@ -90,6 +90,8 @@ function initializeMatchDataPage() {
     }
     
     loadMatchesList();
+    // Aggiorna il riepilogo se c'è una partita corrente
+    updateMatchSummary();
 
     // Gestione nuovi pulsanti
     const newMatchBtn = document.getElementById('new-match-btn');
@@ -196,6 +198,8 @@ function handleNewMatch(e) {
     if (appState.currentPage === 'scouting') {
         updateMatchInfo();
     }
+    // Aggiorna riepilogo in Match-Data
+    updateMatchSummary();
     
     // Aggiorna UI
     loadMatchesList();
@@ -263,6 +267,8 @@ function loadMatch(matchId) {
         if (appState.currentPage === 'scouting') {
             updateMatchInfo();
         }
+        // Aggiorna riepilogo in Match-Data
+        updateMatchSummary();
         
         alert(`Partita caricata: ${match.homeTeam} vs ${match.awayTeam}`);
     }
@@ -693,6 +699,27 @@ function startSet() {
     openDialog('scouting-dialog');
     
     alert(`Set ${setNumber} iniziato! Rotazione: ${rotation}, Fase: ${phase}`);
+}
+
+function updateMatchSummary() {
+    const dateEl = document.getElementById('summary-date');
+    const typeEl = document.getElementById('summary-type');
+    const teamsEl = document.getElementById('summary-teams');
+    if (!dateEl || !typeEl || !teamsEl) return;
+
+    if (appState.currentMatch) {
+        const date = appState.currentMatch.date || '-';
+        const type = appState.currentMatch.matchType || '-';
+        const myTeam = appState.currentMatch.myTeam || appState.currentMatch.homeTeam || '-';
+        const opponent = appState.currentMatch.opponentTeam || appState.currentMatch.awayTeam || '-';
+        teamsEl.textContent = `${myTeam} vs ${opponent}`;
+        dateEl.textContent = date;
+        typeEl.textContent = type;
+    } else {
+        dateEl.textContent = '-';
+        typeEl.textContent = '-';
+        teamsEl.textContent = '-';
+    }
 }
 
 function updateMatchInfo() {
