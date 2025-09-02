@@ -338,8 +338,15 @@ function initializeRosterPage() {
 
     if (btnList && !btnList.dataset.bound) {
         btnList.addEventListener('click', () => {
+            // Apri il dialog con l'elenco dei roster salvati.
+            // Se non ci sono roster, mostra un prompt e non aprire il dialog.
+            const rosters = getStoredRosters();
+            if (!rosters || rosters.length === 0) {
+                alert('Nessun Elenco giocatori presente in memoria');
+                return;
+            }
             loadRostersList();
-            if (savedSection) savedSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+            openDialog('roster-list-dialog');
         });
         btnList.dataset.bound = '1';
     }
@@ -474,12 +481,12 @@ function getStoredRosters() {
 function loadRostersList() {
     const rosters = getStoredRosters();
     const container = document.getElementById('saved-rosters');
-    
+
     if (rosters.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666;">Nessun roster salvato</p>';
         return;
     }
-    
+
     container.innerHTML = rosters.map(roster => {
         const playerCount = roster.players.filter(p => p && (p.number || p.name || p.surname)).length;
         return `
@@ -506,18 +513,12 @@ function loadRoster(rosterId) {
         appState.currentRoster = roster.players;
         const nameInput = document.getElementById('roster-name');
         if (nameInput) nameInput.value = roster.name; // se presente nel vecchio form
-        
-        // Popola il form classico se esiste
-        for (let i = 0; i < 16; i++) {
-            const player = roster.players[i] || {};
-            const n = document.querySelector(`[data-field="number"][data-index="${i}"]`); if (n) n.value = player.number || '';
-            const na = document.querySelector(`[data-field="name"][data-index="${i}"]`); if (na) na.value = player.name || '';
-            const su = document.querySelector(`[data-field="surname"][data-index="${i}"]`); if (su) su.value = player.surname || '';
-            const ro = document.querySelector(`[data-field="role"][data-index="${i}"]`); if (ro) ro.value = player.role || '';
-            const ni = document.querySelector(`[data-field="nickname"][data-index="${i}"]`); if (ni) ni.value = player.nickname || '';
-        }
-        
-        setLoadRosterEnabled(true);
+
+        // Aggiorna la tabella della pagina
+        renderRosterTable();
+        // Abilita e chiudi dialog elenco
+        // setLoadRosterEnabled(true);
+        closeDialog('roster-list-dialog');
         alert(`Roster "${roster.name}" caricato con successo!`);
     }
 }
@@ -558,9 +559,9 @@ function exportRoster(rosterId) {
 function importRosterFromListFile(file) {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = (e) => {
         try {
-            const data = JSON.parse(reader.result);
+            const data = JSON.parse(e.target.result);
             if (!data || !Array.isArray(data.players)) throw new Error('Formato non valido');
             const roster = {
                 id: Date.now(),
@@ -572,15 +573,21 @@ function importRosterFromListFile(file) {
             loadRostersList();
             // imposta come roster corrente per abilitarne l'uso rapido
             appState.currentRoster = data.players;
-            setLoadRosterEnabled(true);
+            // setLoadRosterEnabled(true);
+            renderRosterTable();
             alert(`Roster "${roster.name}" importato nella lista`);
-        } catch (e) {
-            console.error(e);
+        } catch (err) {
             alert('Impossibile importare: il file non è un JSON roster valido.');
         }
     };
-    reader.onerror = () => alert('Errore lettura file.');
-    reader.readAsText(file, 'utf-8');
+    reader.readAsText(file);
+}
+function setLoadRosterEnabled(enabled) {
+    const btnLoad = document.getElementById('btn-load-roster');
+    if (btnLoad) {
+        // Il tasto Carica apre sempre il dialog elenco; non disabilitarlo.
+        btnLoad.disabled = false;
+    }
 }
 function updateCurrentPhaseDisplay() {
     const phaseElement = document.getElementById('current-phase');
@@ -761,6 +768,17 @@ function updateScoutingUI() {
     document.getElementById('current-rotation').textContent = appState.currentRotation;
     document.getElementById('current-phase').textContent = appState.currentPhase;
     document.getElementById('current-set-display').textContent = `Set ${appState.currentSet}`;
+}
+
+function updateActionSummary() {
+    const el = document.getElementById('action-summary');
+    const box = document.getElementById('action-summary-box');
+    if (!el) return;
+    const text = (appState.currentSequence && appState.currentSequence.length > 0)
+        ? appState.currentSequence.map(s => s.quartet).join(' ')
+        : '';
+    el.textContent = text;
+    if (box) box.style.display = text ? 'block' : 'none';
 }
 
 function submitAction() {
@@ -960,6 +978,8 @@ function fitActivePageToViewport() {
         const main = document.querySelector('.main');
         if (!activePage || !main) return;
 
+        let pageOverflowHandled = false; // NUOVO: evita ReferenceError e gestisce fallback
+
         const headerH = header ? header.offsetHeight : 0;
         const mainPaddingTop = parseFloat(getComputedStyle(main).paddingTop) || 0;
         const mainPaddingBottom = parseFloat(getComputedStyle(main).paddingBottom) || 0;
@@ -967,8 +987,8 @@ function fitActivePageToViewport() {
 
         // Applica altezza massima alla pagina attiva
         activePage.style.maxHeight = available + 'px';
-        // Il contenitore pagina non deve scrollare verticalmente
-        activePage.style.overflow = 'hidden';
+        // RIMOSSO: non forzare overflow nascosto di default
+        // activePage.style.overflow = 'hidden';
 
         // Solo la lista partite deve scrollare quando visibile
         if (activePage.id === 'match-data') {
@@ -977,18 +997,29 @@ function fitActivePageToViewport() {
             if (listSection && list) {
                 const visible = getComputedStyle(listSection).display !== 'none';
                 if (visible) {
+                    // Elenco partite: la pagina scorre e scorre anche la lista internamente
+                    activePage.style.overflowY = 'auto';
                     const listTop = list.getBoundingClientRect().top;
-                    // Spazio disponibile dal top della lista al fondo della viewport
-                    const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
+                    const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(mainStyles.paddingBottom) || 0) - 8);
                     list.style.maxHeight = listAvailable + 'px';
                     list.style.overflowY = 'auto';
                     list.style.overflowX = 'hidden';
                 } else {
+                    // Nuova partita: abilita lo scroll verticale della pagina
+                    activePage.style.overflowY = 'auto';
+                    activePage.style.overflowX = 'hidden';
                     list.style.maxHeight = '';
                     list.style.overflowY = '';
                     list.style.overflowX = '';
                 }
+                pageOverflowHandled = true;
             }
+        }
+
+        if (!pageOverflowHandled) {
+            // Fallback di sicurezza: consenti lo scroll verticale della pagina
+            activePage.style.overflowY = 'auto';
+            activePage.style.overflowX = 'hidden';
         }
 
         // Roster: scroll solo sulla griglia dei giocatori
@@ -1041,52 +1072,55 @@ function fitActivePageToViewport() {
 
         // Imposta un limite massimo di altezza alla pagina attiva
         activePage.style.maxHeight = available + 'px';
-        // Il contenitore pagina non deve scrollare verticalmente
-        activePage.style.overflow = 'hidden';
 
-        // Solo la lista partite deve scrollare quando visibile
         if (activePage.id === 'match-data') {
             const listSection = document.getElementById('matches-list-section');
             const list = document.getElementById('matches-list');
-            if (listSection && list) {
-                const visible = getComputedStyle(listSection).display !== 'none';
-                if (visible) {
-                    const listTop = list.getBoundingClientRect().top;
-                    const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
-                    list.style.maxHeight = listAvailable + 'px';
-                    list.style.overflowY = 'auto';
-                    list.style.overflowX = 'hidden';
-                } else {
+            const listVisible = listSection && getComputedStyle(listSection).display !== 'none' && !listSection.classList.contains('hidden');
+
+            if (listVisible && list) {
+                // Elenco Partite: la pagina scorre e scorre anche la lista internamente
+                activePage.style.overflowY = 'auto';
+                const listTop = list.getBoundingClientRect().top;
+                const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(mainStyles.paddingBottom) || 0) - 8);
+                list.style.maxHeight = listAvailable + 'px';
+                list.style.overflowY = 'auto';
+                list.style.overflowX = 'hidden';
+            } else {
+                // Nuova Partita: la pagina deve poter scorrere verticalmente
+                activePage.style.overflowY = 'auto';
+                activePage.style.overflowX = 'hidden';
+                if (list) {
                     list.style.maxHeight = '';
                     list.style.overflowY = '';
                     list.style.overflowX = '';
                 }
             }
-        }
-
-        // Roster: scroll solo sulla griglia dei giocatori
-        if (activePage.id === 'roster') {
+        } else if (activePage.id === 'roster') {
+            // Roster: scroll solo sulla griglia dei giocatori
             const grid = document.getElementById('roster-form');
             if (grid) {
                 const gridTop = grid.getBoundingClientRect().top;
-                const gridAvailable = Math.max(0, window.innerHeight - gridTop - (parseFloat(getComputedStyle(main).paddingBottom) || 0) - 8);
+                const gridAvailable = Math.max(0, window.innerHeight - gridTop - (parseFloat(mainStyles.paddingBottom) || 0) - 8);
                 grid.style.maxHeight = gridAvailable + 'px';
                 grid.style.overflowY = 'auto';
                 grid.style.overflowX = 'hidden';
             }
+            activePage.style.overflowY = 'auto';
+            activePage.style.overflowX = 'hidden';
+        } else {
+            // Fallback generico: consenti lo scroll della pagina
+            activePage.style.overflowY = 'auto';
+            activePage.style.overflowX = 'hidden';
         }
 
-        // Reset classi di compattazione
+        // Gestione classi di compressione per piccoli schermi
         activePage.classList.remove('compact', 'ultra-compact');
         document.body.classList.remove('compact-global');
-
-        // Se il contenuto complessivo eccede, comprimi progressivamente
         const exceeds = activePage.scrollHeight > available;
         if (exceeds) {
             document.body.classList.add('compact-global');
             activePage.classList.add('compact');
-
-            // Dopo l'applicazione della classe, ricalcola e verifica se serve ulteriore compressione
             requestAnimationFrame(() => {
                 if (activePage.scrollHeight > available) {
                     activePage.classList.add('ultra-compact');
@@ -1102,15 +1136,9 @@ function fitActivePageToViewport() {
 // Gestione abilitazione pulsante "Carica Roster"
 function setLoadRosterEnabled(enabled) {
     const btnLoad = document.getElementById('btn-load-roster');
-    if (!btnLoad) return;
-    if (enabled) {
-        btnLoad.removeAttribute('disabled');
-        btnLoad.classList.remove('is-disabled');
-        btnLoad.setAttribute('aria-disabled', 'false');
-    } else {
-        btnLoad.setAttribute('disabled', '');
-        btnLoad.classList.add('is-disabled');
-        btnLoad.setAttribute('aria-disabled', 'true');
+    if (btnLoad) {
+        // Il tasto Carica apre sempre il dialog elenco; non disabilitarlo.
+        btnLoad.disabled = false;
     }
 }
 
@@ -1150,6 +1178,13 @@ function importRosterFromFile(file) {
             const data = JSON.parse(text);
             const isValid = data && Array.isArray(data.players);
             if (!isValid) throw new Error('Formato file non valido');
+
+            // Assicurati che la griglia sia presente prima di popolare
+            const hasInputs = document.querySelector('#roster-form-dialog [data-field="number"]');
+            if (!hasInputs) {
+                generateRosterFormIn('roster-form-dialog');
+            }
+
             // Nome
             const nameInput = document.getElementById('roster-name-dialog');
             if (nameInput) nameInput.value = (data.name || '').toString();
@@ -1166,6 +1201,9 @@ function importRosterFromFile(file) {
             updateRosterStateFrom('roster-form-dialog');
             setLoadRosterEnabled(true);
             alert('Roster importato con successo!');
+            // Permetti di reimportare lo stesso file nella stessa sessione
+            const inputEl = document.getElementById('import-roster-file');
+            if (inputEl) inputEl.value = '';
         } catch (e) {
             console.error(e);
             alert('Impossibile importare il file selezionato. Verifica che sia un JSON valido del roster.');
@@ -1173,6 +1211,31 @@ function importRosterFromFile(file) {
     };
     reader.onerror = () => alert('Errore lettura file.');
     reader.readAsText(file, 'utf-8');
+}
+
+// Rende la tabella dei giocatori nella pagina Roster (sezione inferiore)
+function renderRosterTable() {
+    const tbody = document.getElementById('roster-table-body');
+    if (!tbody) return;
+
+    const players = Array.isArray(appState.currentRoster) ? appState.currentRoster : [];
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+
+    const valid = players.filter(p => p && (p.number || p.name || p.surname || p.role || p.nickname));
+    if (valid.length === 0) {
+        tbody.innerHTML = '';
+        return;
+    }
+
+    tbody.innerHTML = valid.map(p => `
+        <tr>
+            <td>${esc(p.number)}</td>
+            <td>${esc(p.name)}</td>
+            <td>${esc(p.surname)}</td>
+            <td>${esc(p.role)}</td>
+            <td>${esc(p.nickname)}</td>
+        </tr>
+    `).join('');
 }
 
 // === SCOUTING PAGE ===
@@ -1207,35 +1270,39 @@ function initializeScoutingPage() {
 }
 
 function openDialog(dialogId) {
-    const dialog = document.getElementById(dialogId);
-    if (dialog) {
+    const el = document.getElementById(dialogId);
+    if (!el) return;
+    const isNative = el.tagName && el.tagName.toLowerCase() === 'dialog';
+    if (isNative) {
         try {
-            if (typeof dialog.showModal === 'function') {
-                dialog.showModal();
-            } else {
-                // Fallback se showModal non è supportato
-                dialog.setAttribute('open', 'open');
-            }
-        } catch (e) {
-            // Ulteriore fallback in caso di eccezioni
-            dialog.setAttribute('open', 'open');
-        }
+            if (typeof el.showModal === 'function') el.showModal();
+            else el.setAttribute('open', 'open');
+        } catch (e) { el.setAttribute('open', 'open'); }
+        return;
     }
+    // Gestione custom <div class="dialog">
+    el.removeAttribute('hidden');
+    el.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
 }
 
 function closeDialog(dialogId) {
-    const dialog = document.getElementById(dialogId);
-    if (dialog) {
+    const el = document.getElementById(dialogId);
+    if (!el) return;
+    const isNative = el.tagName && el.tagName.toLowerCase() === 'dialog';
+    if (isNative) {
         try {
-            if (typeof dialog.close === 'function') {
-                dialog.close();
-            } else {
-                dialog.removeAttribute('open');
-            }
-        } catch (e) {
-            dialog.removeAttribute('open');
-        }
+            if (typeof el.close === 'function') el.close();
+            else el.removeAttribute('open');
+        } catch (e) { el.removeAttribute('open'); }
+        return;
     }
+    // Gestione custom <div class="dialog">
+    el.setAttribute('hidden', '');
+    el.classList.remove('is-open');
+    // Ripristina lo scroll se nessun altro dialog custom è aperto
+    const anyOpen = document.querySelector('.dialog.is-open:not([hidden])');
+    if (!anyOpen) document.body.style.overflow = '';
 }
 
 function initializeGuidedScouting() {
@@ -1251,8 +1318,8 @@ function initializeGuidedScouting() {
     const evalButtons = document.querySelectorAll('.eval-btn');
     evalButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const evaluation = parseInt(e.target.dataset.eval);
-            submitGuidedAction(evaluation);
+            const evaluation = parseInt(e.currentTarget.dataset.eval || e.currentTarget.textContent.trim()[0]);
+            selectEvaluation(evaluation);
         });
     });
     
@@ -1292,8 +1359,7 @@ function updatePlayersGrid() {
                         : '';
         return `
             <button class="player-btn ${roleClass}" data-role="${role}" data-number="${player.number}" data-name="${displayName}">
-                <div class="player-number">${player.number}</div>
-                <div class="player-name">${displayName}</div>
+                <div class="player-line1"><span class="player-number">${player.number}</span> <span class="player-name">${displayName}</span></div>
                 <div class="player-role">${role}</div>
             </button>
         `;
@@ -1312,13 +1378,26 @@ function updatePlayersGrid() {
 function selectPlayer(number, name) {
     appState.selectedPlayer = { number, name };
     
-    const playerInfoElement = document.getElementById('selected-player-info');
-    if (playerInfoElement) {
-        playerInfoElement.textContent = `${number} - ${name}`;
+    // Aggiorna entrambi gli elementi per compatibilità
+    const oldElement = document.getElementById('selected-player-info');
+    if (oldElement) {
+        oldElement.textContent = `${number} - ${name}`;
+    }
+    const newElement = document.getElementById('selected-player-display');
+    if (newElement) {
+        newElement.textContent = `${number} - ${name}`;
     }
     
     // Aggiorna il fondamentale corrente
     updateNextFundamental();
+    
+    // Mostra box riepilogo azione se esiste
+    const summaryBox = document.getElementById('action-summary-box');
+    if (summaryBox) {
+        summaryBox.style.display = 'block';
+    }
+    
+    updateActionSummary();
     
     // Passa alla selezione della valutazione
     showScoutingStep('step-action');
@@ -1359,6 +1438,8 @@ function submitGuidedAction() {
     const quartet = `${appState.selectedPlayer.number.padStart(2, '0')}${fundamental}${evaluation}`;
     appState.currentSequence.push({quartet, playerName: appState.selectedPlayer.name});
     
+    updateActionSummary();
+    
     const tempResult = determineFinalResult(fundamental, evaluation);
     let isPoint = tempResult === 'home_point' || tempResult === 'away_point';
     
@@ -1376,12 +1457,12 @@ function submitGuidedAction() {
             });
             
             appState.currentSequence = [];
+            updateActionSummary();
         } catch (error) {
             alert(`Errore nell'azione: ${error.message}`);
             appState.currentSequence.pop(); // Rimuovi l'ultima se errore
             return;
         }
-    } else {
     }
     
     // Aggiorna UI
@@ -1418,6 +1499,7 @@ function submitOpponentError() {
         checkSetEnd();
         updateNextFundamental();
         showScoutingStep('player-selection');
+        updateActionSummary();
     } catch (error) {
         alert(`Errore: ${error.message}`);
     }

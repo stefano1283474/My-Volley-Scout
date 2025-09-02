@@ -27,21 +27,21 @@
             <div id="match-data" class="page active">
                 
                 <div class="match-summary section" id="match-summary">
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-label">Data</div>
-                            <div class="summary-value" id="summary-date">-</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-label">Tipo evento</div>
-                            <div class="summary-value" id="summary-type">-</div>
-                        </div>
-                        <div class="summary-item" style="grid-column: 1 / -1;">
-                            <div class="summary-label">Squadre</div>
-                            <div class="summary-value" id="summary-teams">-</div>
-                        </div>
-                    </div>
-                </div>
+                      <div class="summary-grid">
+                          <div class="summary-item">
+                              <div class="summary-label">Data</div>
+                              <div class="summary-value" id="summary-date">-</div>
+                          </div>
+                          <div class="summary-item">
+                              <div class="summary-label">Tipo evento</div>
+                              <div class="summary-value" id="summary-type">-</div>
+                          </div>
+                          <div class="summary-item" style="grid-column: 1 / -1;">
+                              <div class="summary-label">Squadre</div>
+                              <div class="summary-value" id="summary-teams">-</div>
+                          </div>
+                      </div>
+                  </div>
                 
                 <div class="match-actions">
                     <button id="new-match-btn" class="btn btn-primary">Nuova Partita</button>
@@ -49,7 +49,6 @@
                 </div>
                 
                 <div id="new-match-section" class="section">
-                    <h3>Nuova Partita</h3>
                     <form id="new-match-form" class="form">
                         <div class="form-group">
                             <label for="my-team">Il mio Team:</label>
@@ -92,42 +91,73 @@
             <!-- Roster Page -->
             <div id="roster" class="page hidden">
                 
-                <div class="section">
-                    <div class="roster-top-actions match-actions">
-                        <button id="btn-create-roster" class="btn btn-primary">Crea Nuovo</button>
-                        <button id="btn-list-rosters" class="btn btn-secondary">Elenco</button>
-                        <button id="btn-load-roster" class="btn btn-secondary" disabled>Carica</button>
+                <div class="roster-page-content" aria-labelledby="roster-title">
+                  <div class="section">
+                    <div class="button-row top-actions">
+                      <button id="btn-create-roster" class="btn btn-primary">Crea Nuovo</button>
+                      <button id="btn-list-rosters" class="btn">Elenco</button>
+                      <button id="btn-load-roster" class="btn">Carica</button>
                     </div>
-                </div>
-            
-                <!-- Elenco roster salvati -->
-                <div class="section">
-                    <div class="section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                        <h2 style="margin:0;">Roster Salvati</h2>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <button id="import-roster-list-btn" class="btn btn-secondary">Importa CSV</button>
-                            <input type="file" id="import-roster-list-file" accept="text/csv,.csv,application/json,.json" style="display:none" />
-                        </div>
+                  </div>
+                
+                  <!-- Tabella inferiore con i dati delle giocatrici (vuota inizialmente) -->
+                  <div class="section">
+                    <h3 class="section-title">Dati Giocatrici</h3>
+                    <div class="table-wrapper">
+                      <table class="data-table">
+                        <thead>
+                          <tr>
+                            <th>N°</th>
+                            <th>Nome</th>
+                            <th>Cognome</th>
+                            <th>Ruolo</th>
+                            <th>Nickname</th>
+                          </tr>
+                        </thead>
+                        <tbody id="roster-table-body"><!-- popolata da renderRosterTable() --></tbody>
+                      </table>
                     </div>
-                    <div id="saved-rosters" class="list"></div>
+                  </div>
                 </div>
-            
-                <!-- Dialog creazione/modifica roster -->
-                <dialog id="roster-dialog">
-                    <form method="dialog" class="dialog-form" id="roster-form-wrapper">
-                        <h3>Crea Nuovo Roster</h3>
-                        <input id="roster-name-dialog" type="text" placeholder="Nome Roster" />
-                        <div class="dialog-actions">
-                            <button type="button" id="save-roster-dialog" class="btn btn-primary">Salva Roster</button>
-                            <button type="button" id="clear-roster-dialog" class="btn" >Pulisci</button>
-                            <button type="button" id="export-roster-dialog" class="btn">Esporta</button>
-                            <button type="button" id="import-roster-dialog" class="btn">Importa CSV</button>
-                            <input type="file" id="import-roster-file" accept="text/csv,.csv,application/json,.json" style="display:none" />
-                            <button type="button" class="btn" onclick="closeDialog('roster-dialog')">Chiudi</button>
-                        </div>
-                        <div id="roster-form-dialog" class="roster-form"></div>
-                    </form>
-                </dialog>
+                
+                <!-- Dialog: Crea/Modifica Roster a tutta pagina (riusa il vecchio roster-dialog) -->
+                <div id="roster-dialog" class="dialog full-screen" role="dialog" aria-modal="true" aria-labelledby="roster-dialog-title" hidden>
+                  <div class="dialog-content">
+                    <div class="dialog-header">
+                      <h2 id="roster-dialog-title">Crea Nuovo Roster</h2>
+                      <button class="dialog-close" onclick="closeDialog('roster-dialog')" aria-label="Chiudi">×</button>
+                    </div>
+                    <div class="dialog-body">
+                      <label class="input-label" for="roster-name-dialog">Nome Roster</label>
+                      <input id="roster-name-dialog" type="text" class="input" placeholder="Inserisci nome" />
+                      <div id="roster-form-dialog" class="roster-grid"></div>
+                    </div>
+                    <div class="dialog-footer">
+                      <input type="file" id="import-roster-file" accept="application/json" hidden />
+                      <button id="import-roster-dialog" class="btn">Importa</button>
+                      <button id="export-roster-dialog" class="btn">Esporta</button>
+                      <button id="clear-roster-dialog" class="btn btn-secondary">Pulisci</button>
+                      <button id="save-roster-dialog" class="btn btn-primary">Salva</button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Dialog: Elenco Roster Salvati a tutta pagina -->
+                <div id="roster-list-dialog" class="dialog full-screen" role="dialog" aria-modal="true" aria-labelledby="roster-list-title" hidden>
+                  <div class="dialog-content">
+                    <div class="dialog-header">
+                      <h2 id="roster-list-title">Roster Salvati</h2>
+                      <button class="dialog-close" onclick="closeDialog('roster-list-dialog')" aria-label="Chiudi">×</button>
+                    </div>
+                    <div class="dialog-body">
+                      <div class="button-row">
+                        <input type="file" id="import-roster-list-file" accept="application/json" hidden />
+                        <button id="import-roster-list-btn" class="btn">Importa CSV</button>
+                      </div>
+                      <div id="saved-rosters" class="roster-list"></div>
+                    </div>
+                  </div>
+                </div>
             </div>
 
             <!-- Scouting Page -->
@@ -208,39 +238,58 @@
                         </div>
                     </div>
                     
-                    <dialog id="scouting-dialog" aria-modal="true" aria-label="Scouting Guidato">
-                        
-                        <div class="scouting-step" id="step-player">
-                            <h3>Seleziona Giocatore</h3>
-                            <div class="players-grid" id="players-grid">
-                                <!-- I giocatori verranno caricati dinamicamente -->
-                            </div>
+                    <div id="scouting-dialog" class="dialog">
+                      <div class="dialog-content">
+                        <div class="dialog-header">
+                          <h3>Selezione Azione</h3>
                         </div>
-                        
-                        <div class="scouting-step" id="step-action">
-                            <h3>Seleziona Azione</h3>
+                        <div class="dialog-body dialog-form">
+                          <!-- Banner Fondamentale in alto -->
+                          <div id="fundamental-banner"><span class="label">Fondamentale:</span> <span class="value" id="current-fundamental-banner"></span></div>
+                      
+                          <!-- Step: Seleziona Giocatore -->
+                          <div class="scouting-step" id="step-player">
+                            <div class="step-header">
+                              <h4>Seleziona Giocatore</h4>
+                              <button class="close-btn" onclick="closeDialog('scouting-dialog')" aria-label="Chiudi">×</button>
+                            </div>
+                            <div id="players-grid" class="players-grid"></div>
+                          </div>
+                      
+                          <!-- Step: Valutazioni -->
+                          <div class="scouting-step" id="step-action">
+                            <h4>Seleziona Azione</h4>
                             <div class="action-info">
-                                <p><strong>Giocatore:</strong> <span id="selected-player-info"></span></p>
-                                <p><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
+                              <p class="player-info"><strong>Giocatore selezionato:</strong> <span id="selected-player-display"></span></p>
+                              <p class="fundamental-info"><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
                             </div>
                             <div class="evaluation-buttons">
-                                <button class="eval-btn" onclick="selectEvaluation(1)">1 - Errore</button>
-                                <button class="eval-btn" onclick="selectEvaluation(2)">2 - Negativo</button>
-                                <button class="eval-btn" onclick="selectEvaluation(3)">3 - Neutro</button>
-                                <button class="eval-btn" onclick="selectEvaluation(4)">4 - Positivo</button>
-                                <button class="eval-btn" onclick="selectEvaluation(5)">5 - Punto</button>
-                            <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
+                              <button class="eval-btn" data-eval="1" onclick="selectEvaluation(1)">1 - Errore</button>
+                              <button class="eval-btn" data-eval="2" onclick="selectEvaluation(2)">2 - Negativo</button>
+                              <button class="eval-btn" data-eval="3" onclick="selectEvaluation(3)">3 - Neutro</button>
+                              <button class="eval-btn" data-eval="4" onclick="selectEvaluation(4)">4 - Positivo</button>
+                              <button class="eval-btn" data-eval="5" onclick="selectEvaluation(5)">5 - Punto</button>
+                              <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
                             </div>
-                            <button class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
-                        </div>
-                        
-                        
-                        
-                        <div id="actions-log" class="actions-log">
+                          </div>
+                      
+                          <!-- Riepilogo azione -->
+                          <div id="action-summary-box">
+                            <h4>Riepilogo azione</h4>
+                            <div id="action-summary"></div>
+                          </div>
+                      
+                          <!-- Conferma -->
+                          <button id="confirm-guided-action" class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
+                      
+                          <!-- Log Azioni -->
+                          <div id="actions-log" class="actions-log">
                             <h4>Log Azioni</h4>
                             <div id="actions-list"></div>
+                          </div>
                         </div>
-                    </dialog>
+                      </div>
+                    </div>
                 </div>
             </div>
         </main>
