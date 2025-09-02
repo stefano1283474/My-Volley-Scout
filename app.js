@@ -65,11 +65,38 @@ function switchPage(pageId) {
     
     document.getElementById(pageId === 'roster' ? 'roster' : pageId).classList.add('active');
     document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+
+    // Reset scroll positions to top to prevent leftover scroll gaps
+    try {
+        const mainEl = document.querySelector('.main');
+        if (mainEl) mainEl.scrollTop = 0;
+        const newActivePage = document.querySelector('.page.active');
+        if (newActivePage) newActivePage.scrollTop = 0;
+        // Also reset window/body scroll as a fallback
+        if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        }
+        const docEl = document.documentElement || document.body;
+        if (docEl) docEl.scrollTop = 0;
+    } catch (_) {}
     
     // Inizializza la pagina specifica se necessario
     if (pageId === 'match-data') {
         initializeMatchDataPage();
     } else if (pageId === 'scouting') {
+        console.log('Switching to scouting page. Current match:', appState.currentMatch);
+        console.log('Current roster length:', appState.currentRoster ? appState.currentRoster.length : 0);
+        if (!appState.currentMatch) {
+            alert('Per favore, crea o carica una partita dalla sezione Match-Data.');
+            switchPage('match-data');
+            return;
+        }
+        if (!appState.currentRoster || appState.currentRoster.length === 0) {
+            alert('Per favore, crea o carica un roster dalla sezione El. Gioc.');
+            switchPage('roster');
+            return;
+        }
+        initializeScoutingPage();
         updateMatchInfo();
         // Non aprire il dialog qui; verrà aperto solo dopo l'avvio del set
         const dlg = document.getElementById('scouting-dialog');
@@ -253,7 +280,7 @@ function loadMatchesList() {
                 <div class="match-details">${matchDate}</div>
                 <div class="match-details">${matchType}</div>
                 <div class="match-actions">
-                    <button class="btn btn-primary" onclick="loadMatch(${match.id})">Carica</button>
+                    <button class="btn btn-primary btn-load" onclick="loadMatch(${match.id})">Carica</button>
                     <button class="btn btn-danger" onclick="deleteMatch(${match.id})">Elimina</button>
                 </div>
             </div>
@@ -267,6 +294,7 @@ function loadMatch(matchId) {
     
     if (match) {
         appState.currentMatch = match;
+        console.log('Loaded match:', appState.currentMatch);
         
         // Aggiorna le informazioni della partita se siamo nella pagina di scouting
         if (appState.currentPage === 'scouting') {
@@ -361,7 +389,7 @@ function initializeRosterPage() {
             btnLoad.addEventListener('click', () => {
                 console.log('Load Roster button clicked - switching to scouting');
                 if (appState.currentRoster && appState.currentRoster.length > 0) {
-                    switchPage('start-scouting');
+                    switchPage('scouting');
                 } else {
                     alert('Nessun roster caricato. Seleziona un roster dalla lista.');
                 }
@@ -572,7 +600,7 @@ function loadRostersList() {
                 </div>
                 <div class="roster-actions">
                     <button class="btn btn-secondary" onclick="exportRoster(${roster.id})">Esporta</button>
-                    <button class="btn btn-primary" onclick="loadRoster(${roster.id})">Carica</button>
+                    <button class="btn btn-primary btn-load" onclick="loadRoster(${roster.id})">Carica</button>
                     <button class="btn btn-danger" onclick="deleteRoster(${roster.id})">Elimina</button>
                 </div>
             </div>
@@ -605,7 +633,7 @@ function loadRostersListInTab() {
                 </div>
                 <div class="roster-actions">
                     <button class="btn btn-secondary" onclick="exportRoster(${roster.id})">Esporta</button>
-                    <button class="btn btn-primary" onclick="loadRosterInTab(${roster.id})">Carica</button>
+                    <button class="btn btn-primary btn-load" onclick="loadRosterInTab(${roster.id})">Carica</button>
                     <button class="btn btn-danger" onclick="deleteRosterFromTab(${roster.id})">Elimina</button>
                 </div>
             </div>
@@ -638,14 +666,27 @@ function loadRosterInTab(rosterId) {
     
     if (roster) {
         appState.currentRoster = roster.players;
+        console.log('Loaded roster length:', appState.currentRoster.length);
         
         // Aggiorna la tabella nella sezione "Carica"
         renderRosterTable();
         
         // Passa automaticamente al tab "Carica" per mostrare i dati
         const btnLoad = document.getElementById('btn-load-roster');
-        if (btnLoad) {
-            btnLoad.click();
+        const btnList = document.getElementById('btn-list-rosters');
+        const createSection = document.getElementById('create-roster-section');
+        const listSection = document.getElementById('list-rosters-section');
+        
+        // Attiva il tab "Carica" senza fare il click che causa il redirect
+        if (btnLoad && btnList && createSection && listSection) {
+            createSection.classList.add('hidden');
+            listSection.classList.remove('hidden');
+            btnLoad.classList.add('active');
+            btnList.classList.remove('active');
+            btnLoad.classList.remove('btn-secondary');
+            btnLoad.classList.add('btn-primary');
+            btnList.classList.remove('btn-primary');
+            btnList.classList.add('btn-secondary');
         }
         
         alert(`Roster "${roster.name}" caricato con successo!`);
@@ -1495,6 +1536,30 @@ function initializeScoutingPage() {
                     submitAction();
                 }
             });
+        }
+        
+        // Mostra le sezioni se match e roster sono caricati
+        const matchInfoSection = document.getElementById('match-info-section');
+        const setConfigSection = document.querySelector('#scouting .section:nth-of-type(2)');
+        
+        console.log('Checking scouting data:');
+        console.log('Current match:', appState.currentMatch);
+        console.log('Current roster:', appState.currentRoster);
+        console.log('Roster length:', appState.currentRoster ? appState.currentRoster.length : 0);
+        
+        if (appState.currentMatch && appState.currentRoster && appState.currentRoster.length > 0) {
+            console.log('Data loaded, showing scouting sections');
+            if (matchInfoSection) matchInfoSection.style.display = 'block';
+            if (setConfigSection) setConfigSection.style.display = 'block';
+            // Aggiorna le informazioni della partita
+            updateMatchInfo();
+        } else {
+            console.log('Data not fully loaded, hiding scouting sections');
+            if (matchInfoSection) matchInfoSection.style.display = 'none';
+            if (setConfigSection) setConfigSection.style.display = 'none';
+            console.log('Data not fully loaded, hiding scouting sections');
+            if (matchInfoSection) matchInfoSection.style.display = 'none';
+            if (setConfigSection) setConfigSection.style.display = 'none';
         }
         
         // Inizializza interfaccia guidata

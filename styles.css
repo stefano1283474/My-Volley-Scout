@@ -77,13 +77,15 @@ body {
 /* Main content */
 .main {
     flex: 1;
-    padding: 2rem 1rem;
+    padding: 0 1rem 1rem 1rem;
+    padding-top: 0;
     max-width: 1200px;
     margin: 0 auto;
+    margin-top: 0;
     width: 100%;
     /* Evita overflow in layout flex nelle pagine alte */
     min-height: 0;
-    overflow: hidden; /* Consenti lo scroll interno della pagina attiva */
+    overflow: auto; /* Consenti lo scroll interno della pagina attiva */
     display: flex;          /* NUOVO: contenitore flex */
     flex-direction: column; /* NUOVO: verticale */
 }
@@ -92,16 +94,17 @@ body {
 .page {
     display: none;
     animation: fadeIn 0.3s ease-in;
-    /* Rendi la pagina attiva un contenitore scrollabile verticale */
-    height: 100%;
-    min-height: 0;
+    height: auto;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    flex: 1 1 auto; /* NUOVO: occupa lo spazio disponibile */
+    flex: 0 1 auto;
 }
 
 .page.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100%;
 }
 
 @keyframes fadeIn {
@@ -122,6 +125,7 @@ body {
     background: white;
     border-radius: 12px;
     padding: 2rem;
+    margin-top: 0;
     margin-bottom: 2rem;
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     border: 1px solid #e0e0e0;
@@ -211,6 +215,19 @@ body {
 .btn-danger:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+}
+
+/* Pulsanti di caricamento con sfondo verde */
+.btn-load {
+    background: linear-gradient(135deg, #4CAF50, #388E3C) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-load:hover {
+    background: linear-gradient(135deg, #45a049, #2E7D32) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
 }
 
 /* Match list */
@@ -568,7 +585,7 @@ body {
 
 @media (max-width: 480px) {
   /* Compatta spazi su mobile e consenti adattamento pieno alla larghezza */
-  .main { padding: 1rem 0.75rem; }
+  .main { padding: 0 0.75rem 1rem; }
   .section { padding: 1rem; margin-bottom: 1rem; }
   .section h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
   .form-group input, .form-group select { padding: 0.7rem; font-size: 1rem; }
@@ -766,7 +783,7 @@ body {
 @media (max-width: 600px) {
   .match-actions { gap: 6px; }
   .roster-item { flex-direction: column; align-items: stretch; }
-  .roster-actions { justify-content: flex-end; }
+  .roster-actions { justify-content: flex-start; }
 }
 
 /* Dialog form layout */
@@ -984,7 +1001,7 @@ body {
 
 @media (max-width: 480px) {
   /* Compatta spazi su mobile e consenti adattamento pieno alla larghezza */
-  .main { padding: 1rem 0.75rem; }
+  .main { padding: 0 0.75rem 1rem; }
   .section { padding: 1rem; margin-bottom: 1rem; }
   .section h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
   .form-group input, .form-group select { padding: 0.7rem; font-size: 1rem; }
@@ -1182,7 +1199,7 @@ body {
 @media (max-width: 600px) {
   .match-actions { gap: 6px; }
   .roster-item { flex-direction: column; align-items: stretch; }
-  .roster-actions { justify-content: flex-end; }
+  .roster-actions { justify-content: flex-start; }
 }
 
 /* Dialog form layout */
@@ -1253,7 +1270,7 @@ body {
 
 @media (max-width: 480px) {
   /* Compatta spazi su mobile e consenti adattamento pieno alla larghezza */
-  .main { padding: 1rem 0.75rem; }
+  .main { padding: 0 0.75rem 1rem; }
   .section { padding: 1rem; margin-bottom: 1rem; }
   .section h3 { font-size: 1.1rem; margin-bottom: 0.75rem; }
   .form-group input, .form-group select { padding: 0.7rem; font-size: 1rem; }
@@ -1451,10 +1468,202 @@ body {
 @media (max-width: 600px) {
   .match-actions { gap: 6px; }
   .roster-item { flex-direction: column; align-items: stretch; }
-  .roster-actions { justify-content: flex-end; }
+  .roster-actions { justify-content: flex-start; }
 }
 
 /* Dialog form layout */
 .dialog-form > h3 { margin-top: 0; }
 .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
 .roster-form { margin-top: 10px; }
+
+/* Roster Tab System */
+.roster-actions {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.roster-actions .btn {
+    background: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 24px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.roster-actions .btn:hover {
+    background: #e8e8e8;
+    color: #333;
+}
+
+.roster-actions .btn.active {
+    background: white;
+    color: #007bff;
+    border-color: #007bff;
+    border-bottom: 2px solid white;
+    margin-bottom: -2px;
+    z-index: 2;
+}
+
+.roster-data-container {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 20px;
+    min-height: 400px;
+}
+
+.roster-data-container .section {
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-header .section-title {
+    margin: 0;
+}
+
+.roster-data-container .section.hidden {
+    display: none;
+}
+
+.roster-current-data {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    min-height: 200px;
+}
+
+.roster-actions-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.rosters-list {
+    min-height: 300px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+/* Responsive adjustments for roster tabs */
+@media (max-width: 768px) {
+    .roster-data-container {
+        padding: 10px;
+    }
+    
+    .roster-actions .btn {
+        font-size: 14px;
+        padding: 8px 16px;
+    }
+    
+    .roster-actions-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* ===== Match Summary: layout compatto 3 righe ===== */
+.match-summary {
+  background: #fff;
+  border: 2px solid #e3f2fd;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-label {
+  font-weight: 600;
+  color: #1976d2;
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.summary-value {
+  color: #333;
+  font-size: 50%;
+  flex: 1;
+}
+
+/* Responsive: su mobile riduci il gap */
+@media (max-width: 480px) {
+  .summary-grid { gap: 0.5rem; }
+  .summary-label { min-width: 80px; font-size: 0.9rem; }
+  .summary-value { font-size: 0.9rem; }
+}
+
+/* ===== Scouting dialog: overrides consolidati (3 colonne stabili, safe-mobile) ===== */
+#scouting-dialog .dialog-content,
+#scouting-dialog .dialog-body,
+#scouting-dialog .dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Header step con X sulla stessa riga (grid 1fr auto) */
+#scouting-dialog .step-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+}
+#scouting-dialog .step-header h4 { margin: 0; }
+#scouting-dialog .step-header .close-btn {
+  justify-self: end;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#scouting-dialog .step-header .close-btn:hover { background: rgba(0,0,0,0.06); }
+
+/* Banner fondamentale in alto */
+#fundamental-banner { display: none; background: #0d47a1; color: #fff; padding: 10px 12px; border-radius: 6px; font-weight: 800; letter-spacing: 0.5px; }
+#fundamental-banner .label, #fundamental-banner .value { text-transform: uppercase; font-size: 150%; }
+#fundamental-banner .label { opacity: 0.9; margin-right: 6px; }
+
+/* Player grid: 3 colonne fisse, nessun taglio laterale */
+#scouting-dialog .players-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+#scouting-dialog .player-btn { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; padding: 10px; border-radius: 10px; min-width: 0; box-sizing: border-box; }
+#scouting-dialog .player-btn .player-line1 { width: 100%; display: flex; align-items: baseline; gap: 6px; font-weight: 700; }
+#scouting-dialog .player-btn .player-number { font-size: 1.2rem; }
+#scouting-dialog .player-btn .player-name { flex: 1; min-width: 0; }
+#scouting-dialog .player-btn .player-role { font-size:

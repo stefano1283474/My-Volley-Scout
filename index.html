@@ -12,17 +12,16 @@
 <body>
     <div id="app">
         <!-- Header -->
-        <header class="header">
+        <div class="header">
             <h1>My Volley Scout</h1>
             <nav class="nav">
                 <button class="nav-btn active" data-page="match-data">Match-Data</button>
                 <button class="nav-btn" data-page="roster">El. Gioc.</button>
                 <button class="nav-btn" data-page="scouting">Start-Scouting</button>
             </nav>
-        </header>
+        </div>
 
         <!-- Main Content -->
-        <main class="main">
             <!-- Match-Data Page -->
             <div id="match-data" class="page active">
                 
@@ -153,7 +152,7 @@
                       <button id="export-roster-main" class="btn btn-secondary">Esporta</button>
                       <button id="import-roster-main" class="btn btn-secondary">Importa</button>
                       <input type="file" id="import-roster-file-main" accept="application/json" hidden />
-                      <button id="btn-load-roster" class="btn btn-primary">CARICA</button>
+                      <button id="btn-load-roster" class="btn btn-primary btn-load">CARICA</button>
                     </div>
                   </div>
                 </div>
@@ -331,9 +330,7 @@
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
-
     <script src="app.js?v=1"></script>
+    </div>
 </body>
 </html>
