@@ -107,6 +107,11 @@ function initializeMatchDataPage() {
     if (newMatchBtn && loadMatchesBtn && newMatchSection && matchesListSection) {
         // Funzioni helper tab-like
         const activateTabs = (activeBtn, inactiveBtn) => {
+            // Gestione classi active per il nuovo stile tab
+            activeBtn.classList.add('active');
+            inactiveBtn.classList.remove('active');
+            
+            // Manteniamo anche la logica esistente per compatibilità
             activeBtn.classList.remove('btn-secondary');
             activeBtn.classList.add('btn-primary');
             activeBtn.setAttribute('aria-selected', 'true');
@@ -288,7 +293,49 @@ function initializeRosterPage() {
     const btnCreate = document.getElementById('btn-create-roster');
     const btnList = document.getElementById('btn-list-rosters');
     const btnLoad = document.getElementById('btn-load-roster');
-    const savedSection = document.querySelector('#roster .section:nth-of-type(1)');
+    const createSection = document.getElementById('create-roster-section');
+    const listSection = document.getElementById('list-rosters-section');
+
+    console.log('Initializing Roster Page with tabs');
+    console.log('btnCreate:', btnCreate);
+    console.log('btnList:', btnList);
+    console.log('btnLoad:', btnLoad);
+    console.log('createSection:', createSection);
+    console.log('listSection:', listSection);
+
+    // Funzioni helper per gestire i tab del roster
+    const activateRosterTabs = (activeBtn, inactiveBtn) => {
+        // Gestione classi active per il nuovo stile tab
+        activeBtn.classList.add('active');
+        inactiveBtn.classList.remove('active');
+        
+        // Manteniamo anche la logica esistente per compatibilità
+        activeBtn.classList.remove('btn-secondary');
+        activeBtn.classList.add('btn-primary');
+        
+        inactiveBtn.classList.remove('btn-primary');
+        inactiveBtn.classList.add('btn-secondary');
+    };
+
+    const showCreateTab = () => {
+        createSection.classList.remove('hidden');
+        listSection.classList.add('hidden');
+        activateRosterTabs(btnCreate, btnList);
+        
+        // Genera il form per creare un nuovo roster
+        generateRosterFormIn('roster-form-main');
+        setTimeout(() => fitActivePageToViewport(), 0);
+    };
+
+    const showListTab = () => {
+        createSection.classList.add('hidden');
+        listSection.classList.remove('hidden');
+        activateRosterTabs(btnList, btnCreate);
+        
+        // Carica la lista dei roster salvati
+        loadRostersListInTab();
+        setTimeout(() => fitActivePageToViewport(), 0);
+    };
 
     // Nuovi controlli Import nella lista esterna
     const importListBtn = document.getElementById('import-roster-list-btn');
@@ -297,66 +344,91 @@ function initializeRosterPage() {
     // Carica elenco al primo accesso
     loadRostersList();
 
-    if (btnCreate && !btnCreate.dataset.bound) {
+    // Event listeners per i tab del roster
+    if (btnCreate && btnList && createSection && listSection) {
         btnCreate.addEventListener('click', () => {
-            // Reset stato corrente e prepara dialog
-            appState.currentRoster = [];
-            const nameInput = document.getElementById('roster-name-dialog');
-            if (nameInput) nameInput.value = '';
-            generateRosterFormIn('roster-form-dialog');
-            setLoadRosterEnabled(false);
-            openDialog('roster-dialog');
-
-            const btnSave = document.getElementById('save-roster-dialog');
-            const btnClear = document.getElementById('clear-roster-dialog');
-            if (btnSave && !btnSave.dataset.bound) {
-                btnSave.addEventListener('click', saveCurrentRosterFromDialog);
-                btnSave.dataset.bound = '1';
-            }
-            if (btnClear && !btnClear.dataset.bound) {
-                btnClear.addEventListener('click', () => clearRosterIn('roster-form-dialog'));
-                btnClear.dataset.bound = '1';
-            }
-            const btnImport = document.getElementById('import-roster-dialog');
-            const btnExport = document.getElementById('export-roster-dialog');
-            const fileInput = document.getElementById('import-roster-file');
-            if (btnImport && !btnImport.dataset.bound) {
-                btnImport.addEventListener('click', () => fileInput && fileInput.click());
-                btnImport.dataset.bound = '1';
-            }
-            if (fileInput && !fileInput.dataset.bound) {
-                fileInput.addEventListener('change', (e) => importRosterFromFile(e.target.files && e.target.files[0]));
-                fileInput.dataset.bound = '1';
-            }
-            if (btnExport && !btnExport.dataset.bound) {
-                btnExport.addEventListener('click', exportCurrentRosterToFile);
-                btnExport.dataset.bound = '1';
-            }
+            console.log('Create Roster tab clicked');
+            showCreateTab();
         });
-        btnCreate.dataset.bound = '1';
-    }
-
-    if (btnList && !btnList.dataset.bound) {
+        
         btnList.addEventListener('click', () => {
-            // Apri il dialog con l'elenco dei roster salvati.
-            // Se non ci sono roster, mostra un prompt e non aprire il dialog.
-            const rosters = getStoredRosters();
-            if (!rosters || rosters.length === 0) {
-                alert('Nessun Elenco giocatori presente in memoria');
-                return;
-            }
-            loadRostersList();
-            openDialog('roster-list-dialog');
+            console.log('List Rosters tab clicked');
+            showListTab();
         });
-        btnList.dataset.bound = '1';
-    }
-
-    if (btnLoad && !btnLoad.dataset.bound) {
-        btnLoad.addEventListener('click', () => {
-            updatePlayersGrid();
-            alert('Roster caricato per lo scouting. Vai alla scheda "Start-Scouting" per iniziare.');
-        });
-        btnLoad.dataset.bound = '1';
+        
+        // Event listener per il pulsante CARICA (passa allo scouting)
+        if (btnLoad) {
+            btnLoad.addEventListener('click', () => {
+                console.log('Load Roster button clicked - switching to scouting');
+                if (appState.currentRoster && appState.currentRoster.length > 0) {
+                    switchPage('start-scouting');
+                } else {
+                    alert('Nessun roster caricato. Seleziona un roster dalla lista.');
+                }
+            });
+        }
+        
+        // Inizializza con il tab "Crea Nuovo" attivo
+        showCreateTab();
+        
+        // Setup dei pulsanti nella sezione "Crea Nuovo"
+        const saveRosterMainBtn = document.getElementById('save-roster-main');
+        const clearRosterMainBtn = document.getElementById('clear-roster-main');
+        
+        if (saveRosterMainBtn) {
+            saveRosterMainBtn.addEventListener('click', saveCurrentRosterFromMain);
+        }
+        
+        if (clearRosterMainBtn) {
+            clearRosterMainBtn.addEventListener('click', () => clearRosterIn('roster-form-main'));
+        }
+        
+        // Setup dei pulsanti nella sezione "Carica"
+        const exportRosterMainBtn = document.getElementById('export-roster-main');
+        const importRosterMainBtn = document.getElementById('import-roster-main');
+        const importRosterFileMain = document.getElementById('import-roster-file-main');
+        
+        if (exportRosterMainBtn) {
+            exportRosterMainBtn.addEventListener('click', exportCurrentRosterToFile);
+        }
+        
+        if (importRosterMainBtn && importRosterFileMain) {
+            importRosterMainBtn.addEventListener('click', () => importRosterFileMain.click());
+            importRosterFileMain.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    importRosterFromFileMain(e.target.files[0]);
+                }
+            });
+        }
+        
+        // Setup del pulsante importa nella sezione "Crea Nuovo"
+        const importRosterCreateBtn = document.getElementById('import-roster-create');
+        const importRosterFileCreate = document.getElementById('import-roster-file-create');
+        
+        if (importRosterCreateBtn && importRosterFileCreate) {
+            importRosterCreateBtn.addEventListener('click', () => importRosterFileCreate.click());
+            importRosterFileCreate.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    importRosterFromFileMain(e.target.files[0]);
+                }
+            });
+        }
+    } else {
+        console.log('Some roster tab elements not found, falling back to old behavior');
+        
+        // Fallback al comportamento originale se gli elementi tab non sono trovati
+        if (btnCreate && !btnCreate.dataset.bound) {
+            btnCreate.addEventListener('click', () => {
+                // Reset stato corrente e prepara dialog
+                appState.currentRoster = [];
+                const nameInput = document.getElementById('roster-name-dialog');
+                if (nameInput) nameInput.value = '';
+                generateRosterFormIn('roster-form-dialog');
+                setLoadRosterEnabled(false);
+                openDialog('roster-dialog');
+            });
+            btnCreate.dataset.bound = '1';
+        }
     }
 
     // Bind import esterno (fuori dialog)
@@ -368,6 +440,9 @@ function initializeRosterPage() {
         importListFile.addEventListener('change', (e) => importRosterFromListFile(e.target.files && e.target.files[0]));
         importListFile.dataset.bound = '1';
     }
+    
+    // Carica sempre i dati del roster corrente nella tabella
+    renderRosterTable();
 }
 
 function generateRosterFormIn(containerId) {
@@ -505,6 +580,39 @@ function loadRostersList() {
     }).join('');
 }
 
+// Funzione per caricare la lista dei roster nel tab
+function loadRostersListInTab() {
+    const rosters = getStoredRosters();
+    const container = document.getElementById('rosters-list');
+
+    if (!container) {
+        console.error('Container rosters-list not found');
+        return;
+    }
+
+    if (rosters.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nessun roster salvato</p>';
+        return;
+    }
+
+    container.innerHTML = rosters.map(roster => {
+        const playerCount = roster.players.filter(p => p && (p.number || p.name || p.surname)).length;
+        return `
+            <div class="roster-item">
+                <div class="roster-info">
+                    <div class="roster-title">${roster.name}</div>
+                    <div class="roster-details">${playerCount} giocatori - ${roster.date}</div>
+                </div>
+                <div class="roster-actions">
+                    <button class="btn btn-secondary" onclick="exportRoster(${roster.id})">Esporta</button>
+                    <button class="btn btn-primary" onclick="loadRosterInTab(${roster.id})">Carica</button>
+                    <button class="btn btn-danger" onclick="deleteRosterFromTab(${roster.id})">Elimina</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 function loadRoster(rosterId) {
     const rosters = getStoredRosters();
     const roster = rosters.find(r => r.id === rosterId);
@@ -521,6 +629,131 @@ function loadRoster(rosterId) {
         closeDialog('roster-list-dialog');
         alert(`Roster "${roster.name}" caricato con successo!`);
     }
+}
+
+// Funzione per caricare un roster dal tab
+function loadRosterInTab(rosterId) {
+    const rosters = getStoredRosters();
+    const roster = rosters.find(r => r.id === rosterId);
+    
+    if (roster) {
+        appState.currentRoster = roster.players;
+        
+        // Aggiorna la tabella nella sezione "Carica"
+        renderRosterTable();
+        
+        // Passa automaticamente al tab "Carica" per mostrare i dati
+        const btnLoad = document.getElementById('btn-load-roster');
+        if (btnLoad) {
+            btnLoad.click();
+        }
+        
+        alert(`Roster "${roster.name}" caricato con successo!`);
+    }
+}
+
+// Funzione per eliminare un roster dal tab
+function deleteRosterFromTab(rosterId) {
+    if (confirm('Sei sicuro di voler eliminare questo roster?')) {
+        deleteRoster(rosterId);
+        // Ricarica la lista nel tab
+        loadRostersListInTab();
+    }
+}
+
+// Funzione per salvare il roster dalla sezione principale
+function saveCurrentRosterFromMain() {
+    const nameInput = document.getElementById('roster-name-main');
+    const rosterName = nameInput ? nameInput.value.trim() : '';
+    
+    if (!rosterName) {
+        alert('Inserisci un nome per il roster');
+        return;
+    }
+    
+    // Aggiorna lo stato del roster dal form principale
+    updateRosterStateFrom('roster-form-main');
+    
+    const validPlayers = appState.currentRoster.filter(p => p && (p.number || p.name || p.surname));
+    if (validPlayers.length === 0) {
+        alert('Aggiungi almeno un giocatore al roster');
+        return;
+    }
+    
+    const roster = {
+        id: Date.now(),
+        name: rosterName,
+        players: appState.currentRoster,
+        date: new Date().toLocaleDateString('it-IT')
+    };
+    
+    const rosters = getStoredRosters();
+    rosters.push(roster);
+    localStorage.setItem('volleyRosters', JSON.stringify(rosters));
+    
+    alert(`Roster "${rosterName}" salvato con successo!`);
+    
+    // Pulisci il form
+    nameInput.value = '';
+    clearRosterIn('roster-form-main');
+}
+
+// Funzione per importare un roster dalla sezione principale
+function importRosterFromFileMain(file) {
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.players || !Array.isArray(data.players)) {
+                throw new Error('Formato file non valido');
+            }
+            
+            // Aggiorna lo stato e il form principale
+            appState.currentRoster = data.players;
+            
+            // Popola il form principale
+            const nameInput = document.getElementById('roster-name-main');
+            if (nameInput && data.name) {
+                nameInput.value = data.name;
+            }
+            
+            // Genera il form e popola i dati
+            generateRosterFormIn('roster-form-main');
+            
+            // Popola i campi del form
+            for (let i = 0; i < data.players.length && i < 16; i++) {
+                const player = data.players[i];
+                if (player) {
+                    const numInput = document.querySelector(`#roster-form-main [data-field="number"][data-index="${i}"]`);
+                    const nameInput = document.querySelector(`#roster-form-main [data-field="name"][data-index="${i}"]`);
+                    const surnameInput = document.querySelector(`#roster-form-main [data-field="surname"][data-index="${i}"]`);
+                    const roleInput = document.querySelector(`#roster-form-main [data-field="role"][data-index="${i}"]`);
+                    const nicknameInput = document.querySelector(`#roster-form-main [data-field="nickname"][data-index="${i}"]`);
+                    
+                    if (numInput) numInput.value = player.number || '';
+                    if (nameInput) nameInput.value = player.name || '';
+                    if (surnameInput) surnameInput.value = player.surname || '';
+                    if (roleInput) roleInput.value = player.role || '';
+                    if (nicknameInput) nicknameInput.value = player.nickname || '';
+                }
+            }
+            
+            // Aggiorna lo stato
+            updateRosterStateFrom('roster-form-main');
+            alert('Roster importato con successo!');
+            
+            // Reset del file input
+            const inputEl = document.getElementById('import-roster-file-main');
+            if (inputEl) inputEl.value = '';
+        } catch (e) {
+            console.error(e);
+            alert('Impossibile importare il file selezionato. Verifica che sia un JSON valido del roster.');
+        }
+    };
+    reader.onerror = () => alert('Errore lettura file.');
+    reader.readAsText(file, 'utf-8');
 }
 
 function deleteRoster(rosterId) {

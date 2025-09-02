@@ -44,46 +44,48 @@
                   </div>
                 
                 <div class="match-actions">
-                    <button id="new-match-btn" class="btn btn-primary">Nuova Partita</button>
-                    <button id="load-matches-btn" class="btn btn-secondary">Elenco Partite</button>
+                    <button id="new-match-btn" class="btn btn-primary active">Nuova Partita</button>
+                    <button id="load-matches-btn" class="btn btn-secondary">Partite Precedenti</button>
                 </div>
                 
-                <div id="new-match-section" class="section">
-                    <form id="new-match-form" class="form">
-                        <div class="form-group">
-                            <label for="my-team">Il mio Team:</label>
-                            <input type="text" id="my-team" placeholder="Inserisci il nome della tua squadra" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="opponent-team">Squadra Avversaria:</label>
-                            <input type="text" id="opponent-team" placeholder="Inserisci il nome della squadra avversaria" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="home-away">La mia squadra gioca:</label>
-                            <select id="home-away" required>
-                                <option value="">Seleziona...</option>
-                                <option value="home">In Casa</option>
-                                <option value="away">In Trasferta</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="match-type">Tipologia Partita:</label>
-                            <select id="match-type" required>
-                                <option value="">Seleziona...</option>
-                                <option value="campionato">Campionato</option>
-                                <option value="coppa">Coppa</option>
-                                <option value="amichevole">Amichevole</option>
-                                <option value="playoff">Playoff</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Crea Partita</button>
-                    </form>
-                </div>
+                <div class="match-data-container">
+                    <div id="new-match-section" class="section">
+                        <form id="new-match-form" class="form">
+                            <div class="form-group">
+                                <label for="my-team">Il mio Team:</label>
+                                <input type="text" id="my-team" placeholder="Inserisci il nome della tua squadra" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="opponent-team">Squadra Avversaria:</label>
+                                <input type="text" id="opponent-team" placeholder="Inserisci il nome della squadra avversaria" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="home-away">La mia squadra gioca:</label>
+                                <select id="home-away" required>
+                                    <option value="">Seleziona...</option>
+                                    <option value="home">In Casa</option>
+                                    <option value="away">In Trasferta</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="match-type">Tipologia Partita:</label>
+                                <select id="match-type" required>
+                                    <option value="">Seleziona...</option>
+                                    <option value="campionato">Campionato</option>
+                                    <option value="coppa">Coppa</option>
+                                    <option value="amichevole">Amichevole</option>
+                                    <option value="playoff">Playoff</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Crea Partita</button>
+                        </form>
+                    </div>
 
-                <div id="matches-list-section" class="section hidden">
-                    <h3>Partite Precedenti</h3>
-                    <div id="matches-list" class="matches-list">
-                        <!-- Lista partite caricate dinamicamente -->
+                    <div id="matches-list-section" class="section hidden">
+                        <h3>Partite Precedenti</h3>
+                        <div id="matches-list" class="matches-list">
+                            <!-- Lista partite caricate dinamicamente -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,16 +94,46 @@
             <div id="roster" class="page hidden">
                 
                 <div class="roster-page-content" aria-labelledby="roster-title">
-                  <div class="section">
-                    <div class="button-row top-actions">
-                      <button id="btn-create-roster" class="btn btn-primary">Crea Nuovo</button>
-                      <button id="btn-list-rosters" class="btn">Elenco</button>
-                      <button id="btn-load-roster" class="btn">Carica</button>
-                    </div>
+                  <!-- Tab buttons per roster -->
+                  <div class="roster-actions">
+                    <button id="btn-create-roster" class="btn btn-primary active">Crea Nuovo</button>
+                    <button id="btn-list-rosters" class="btn btn-secondary">Elenco</button>
                   </div>
-                
-                  <!-- Tabella inferiore con i dati delle giocatrici (vuota inizialmente) -->
-                  <div class="section">
+                  
+                  <!-- Container per le sezioni tab del roster -->
+                  <div class="roster-data-container">
+                    <!-- Sezione Crea Nuovo Roster -->
+                    <div id="create-roster-section" class="section">
+                      <div class="section-header">
+                        <h3 class="section-title">Crea Nuovo Roster</h3>
+                        <div>
+                          <button id="import-roster-create" class="btn btn-secondary">Importa</button>
+                          <input type="file" id="import-roster-file-create" accept="application/json" hidden />
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="roster-name-main">Nome Roster:</label>
+                        <input type="text" id="roster-name-main" class="input" placeholder="Inserisci nome roster" required>
+                      </div>
+                      <div id="roster-form-main" class="roster-grid"></div>
+                      <div class="roster-actions-buttons">
+                        <button id="clear-roster-main" class="btn btn-secondary">Pulisci</button>
+                        <button id="save-roster-main" class="btn btn-primary">Salva Roster</button>
+                      </div>
+                    </div>
+                    
+                    <!-- Sezione Elenco Roster -->
+                    <div id="list-rosters-section" class="section hidden">
+                      <h3 class="section-title">Roster Salvati</h3>
+                      <div id="rosters-list" class="rosters-list">
+                        <!-- Lista roster caricata dinamicamente -->
+                      </div>
+                    </div>
+                    
+                  </div>
+                  
+                  <!-- Sezione Dati Giocatrici (sempre visibile) -->
+                  <div class="roster-current-data">
                     <h3 class="section-title">Dati Giocatrici</h3>
                     <div class="table-wrapper">
                       <table class="data-table">
@@ -117,7 +149,14 @@
                         <tbody id="roster-table-body"><!-- popolata da renderRosterTable() --></tbody>
                       </table>
                     </div>
+                    <div class="roster-actions-buttons">
+                      <button id="export-roster-main" class="btn btn-secondary">Esporta</button>
+                      <button id="import-roster-main" class="btn btn-secondary">Importa</button>
+                      <input type="file" id="import-roster-file-main" accept="application/json" hidden />
+                      <button id="btn-load-roster" class="btn btn-primary">CARICA</button>
+                    </div>
                   </div>
+                </div>
                 </div>
                 
                 <!-- Dialog: Crea/Modifica Roster a tutta pagina (riusa il vecchio roster-dialog) -->
