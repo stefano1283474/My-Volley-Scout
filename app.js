@@ -21,6 +21,7 @@ const rotationSequence = ['P1', 'P6', 'P5', 'P4', 'P3', 'P2'];
 // Inizializzazione dell'app
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded');
+    /*
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(err => console.warn('Service Worker registration failed:', err));
         });
     }
+    */
     initializeApp();
     loadStoredData();
     console.log('initializeApp called');
@@ -78,7 +80,9 @@ function switchPage(pageId) {
         }
         const docEl = document.documentElement || document.body;
         if (docEl) docEl.scrollTop = 0;
-    } catch (_) {}
+    } catch (_) {
+        // Ignora errori di scroll
+    }
     
     // Inizializza la pagina specifica se necessario
     if (pageId === 'match-data') {
@@ -856,13 +860,6 @@ function importRosterFromListFile(file) {
     };
     reader.readAsText(file);
 }
-function setLoadRosterEnabled(enabled) {
-    const btnLoad = document.getElementById('btn-load-roster');
-    if (btnLoad) {
-        // Il tasto Carica apre sempre il dialog elenco; non disabilitarlo.
-        btnLoad.disabled = false;
-    }
-}
 function updateCurrentPhaseDisplay() {
     const phaseElement = document.getElementById('current-phase');
     if (phaseElement) {
@@ -1177,50 +1174,6 @@ function rotateTeam() {
     appState.currentRotation = rotationSequence[nextIndex];
 }
 
-function updateActionsLog() {
-    const container = document.getElementById('actions-list');
-    
-    let displayLogs = appState.actionsLog.slice(-9).reverse();
-    
-    if (appState.currentSequence.length > 0) {
-        const currentString = appState.currentSequence.map(s => s.quartet).join(' ');
-        displayLogs.unshift({
-            timestamp: 'Corrente',
-            action: currentString,
-            result: {result: 'continue'},
-            guided: true
-        });
-    }
-    
-    if (displayLogs.length === 0) {
-        container.innerHTML = '<p style="color: #666;">Nessuna azione registrata</p>';
-        return;
-    }
-    
-    container.innerHTML = displayLogs.map(log => {
-        let resultText = '';
-        switch (log.result.result) {
-            case 'home_point':
-                resultText = '🏐 Punto Casa';
-                break;
-            case 'away_point':
-                resultText = '🏐 Punto Ospiti';
-                break;
-            default:
-                resultText = '↔️ In corso';
-        }
-        
-        const actionDisplay = log.action;
-        const header = log.score ? `Punteggio: ${log.score}` : (log.timestamp || '');
-        
-        return `
-            <div class="action-entry ${log.guided ? 'guided-action' : ''}">
-                <strong>${header}</strong>: ${actionDisplay}
-                <div class="action-result">${resultText}</div>
-            </div>
-        `;
-    }).join('');
-}
 
 function checkSetEnd() {
     const homeScore = appState.homeScore;
@@ -1330,81 +1283,7 @@ function fitActivePageToViewport() {
     }
 }
 
-function fitActivePageToViewport() {
-    try {
-        const vh = window.innerHeight;
-        const header = document.querySelector('.header');
-        const main = document.querySelector('.main');
-        const activePage = document.querySelector('.page.active');
-        if (!activePage || !main) return;
 
-        const headerH = header ? header.offsetHeight : 0;
-        const mainStyles = getComputedStyle(main);
-        const mainPaddingTop = parseFloat(mainStyles.paddingTop) || 0;
-        const mainPaddingBottom = parseFloat(mainStyles.paddingBottom) || 0;
-        const available = vh - headerH - mainPaddingTop - mainPaddingBottom;
-
-        // Imposta un limite massimo di altezza alla pagina attiva
-        activePage.style.maxHeight = available + 'px';
-
-        if (activePage.id === 'match-data') {
-            const listSection = document.getElementById('matches-list-section');
-            const list = document.getElementById('matches-list');
-            const listVisible = listSection && getComputedStyle(listSection).display !== 'none' && !listSection.classList.contains('hidden');
-
-            if (listVisible && list) {
-                // Elenco Partite: la pagina scorre e scorre anche la lista internamente
-                activePage.style.overflowY = 'auto';
-                const listTop = list.getBoundingClientRect().top;
-                const listAvailable = Math.max(0, window.innerHeight - listTop - (parseFloat(mainStyles.paddingBottom) || 0) - 8);
-                list.style.maxHeight = listAvailable + 'px';
-                list.style.overflowY = 'auto';
-                list.style.overflowX = 'hidden';
-            } else {
-                // Nuova Partita: la pagina deve poter scorrere verticalmente
-                activePage.style.overflowY = 'auto';
-                activePage.style.overflowX = 'hidden';
-                if (list) {
-                    list.style.maxHeight = '';
-                    list.style.overflowY = '';
-                    list.style.overflowX = '';
-                }
-            }
-        } else if (activePage.id === 'roster') {
-            // Roster: scroll solo sulla griglia dei giocatori
-            const grid = document.getElementById('roster-form');
-            if (grid) {
-                const gridTop = grid.getBoundingClientRect().top;
-                const gridAvailable = Math.max(0, window.innerHeight - gridTop - (parseFloat(mainStyles.paddingBottom) || 0) - 8);
-                grid.style.maxHeight = gridAvailable + 'px';
-                grid.style.overflowY = 'auto';
-                grid.style.overflowX = 'hidden';
-            }
-            activePage.style.overflowY = 'auto';
-            activePage.style.overflowX = 'hidden';
-        } else {
-            // Fallback generico: consenti lo scroll della pagina
-            activePage.style.overflowY = 'auto';
-            activePage.style.overflowX = 'hidden';
-        }
-
-        // Gestione classi di compressione per piccoli schermi
-        activePage.classList.remove('compact', 'ultra-compact');
-        document.body.classList.remove('compact-global');
-        const exceeds = activePage.scrollHeight > available;
-        if (exceeds) {
-            document.body.classList.add('compact-global');
-            activePage.classList.add('compact');
-            requestAnimationFrame(() => {
-                if (activePage.scrollHeight > available) {
-                    activePage.classList.add('ultra-compact');
-                }
-            });
-        }
-    } catch (e) {
-        console.warn('fitActivePageToViewport error:', e);
-    }
-}
 
 
 // Gestione abilitazione pulsante "Carica Roster"
@@ -1804,33 +1683,33 @@ function submitOpponentError() {
 }
 
 function updateGamePhase(fundamental, evaluation) {
-    const eval = parseInt(evaluation);
+    const evalScore = parseInt(evaluation);
 
     // Logica per cambiare la fase di gioco basata sul risultato dell'azione
     if (fundamental === 'b') { // Servizio
-        if (eval === 1) {
+        if (evalScore === 1) {
             // Errore al servizio = punto avversario, passiamo in ricezione
             appState.currentPhase = 'ricezione';
-        } else if (eval === 5) {
+        } else if (evalScore === 5) {
             // Ace = punto nostro, rimaniamo al servizio
             appState.currentPhase = 'servizio';
         }
         // Per valutazioni 2,3,4 la fase rimane invariata fino al prossimo punto
     } else if (fundamental === 'r') { // Ricezione
-        if (eval === 1) {
+        if (evalScore === 1) {
             // Errore in ricezione = punto avversario, passiamo al servizio
             appState.currentPhase = 'servizio';
         }
         // Per altre valutazioni continuiamo nella stessa fase
     } else if (fundamental === 'a') { // Attacco
-        if (eval === 1) {
+        if (evalScore === 1) {
             // Errore in attacco = punto avversario
             if (appState.currentPhase === 'servizio') {
                 appState.currentPhase = 'ricezione';
             } else {
                 appState.currentPhase = 'servizio';
             }
-        } else if (eval === 5) {
+        } else if (evalScore === 5) {
             // Punto in attacco = nostro punto
             if (appState.currentPhase === 'ricezione') {
                 appState.currentPhase = 'servizio';

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scout</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="scouting" class="page active">
+        <div class="section" id="match-info-section" style="display: block;">
+            <h3>Informazioni Partita</h3>
+            <div class="match-info-display">
+                <div class="match-teams">
+                    <span id="match-home-team">tvb (Il mio Team)</span> vs <span id="match-away-team">coop</span>
+                </div>
+                <div class="match-details">
+                    <span id="match-type">-</span> | <span id="match-date">30/08/2025</span>
+                </div>
+            </div>
+        </div>
+        <div class="section" style="display: block;">
+            <h3>Configurazione Set</h3>
+            <div class="set-config">
+                <div class="form-group">
+                    <label for="current-set">Set Corrente:</label>
+                    <select id="current-set">
+                        <option value="1">Set 1</option>
+                        <option value="2">Set 2</option>
+                        <option value="3">Set 3</option>
+                        <option value="4">Set 4</option>
+                        <option value="5">Set 5</option>
+                        <option value="6">Set 6</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="rotation">Rotazione Iniziale:</label>
+                    <select id="rotation">
+                        <option value="P1">P1</option>
+                        <option value="P2">P2</option>
+                        <option value="P3">P3</option>
+                        <option value="P4">P4</option>
+                        <option value="P5">P5</option>
+                        <option value="P6">P6</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="game-phase">Fase di Gioco:</label>
+                    <select id="game-phase">
+                        <option value="servizio">Servizio</option>
+                        <option value="ricezione">Ricezione</option>
+                    </select>
+                </div>
+                <button id="start-set" class="btn btn-primary">Inizia Set</button>
+                </div>
+            </div>
+
+            <div class="section" id="scouting-section" style="display: none;">
+                <h3>Scouting Azioni</h3>
+                
+                <div class="game-status">
+                    <div class="score">
+                        <span class="home-score">0</span> - <span class="away-score">0</span>
+                    </div>
+                    <div class="current-info">
+                        <span id="current-rotation">P1</span> | 
+                        <span id="current-phase">Servizio</span> | 
+                        <span id="current-set-display">Set 1</span>
+                    </div>
+                </div>
+                
+                <div class="scouting-info">
+                    <div class="phase-info">
+                        <strong>Fase di gioco: <span id="current-phase">servizio</span></strong>
+                    </div>
+                    <div class="next-fundamental-info">
+                        <strong>Prossimo fondamentale: <span id="next-fundamental">Servizio (b)</span></strong>
+                    </div>
+                </div>
+                
+                <dialog id="scouting-dialog" aria-modal="true" aria-label="Scouting Guidato">
+                    
+                    <div class="scouting-step" id="step-player">
+                        <h3>Seleziona Giocatore</h3>
+                        <div class="players-grid" id="players-grid">
+                            <!-- I giocatori verranno caricati dinamicamente -->
+                        </div>
+                    </div>
+                    
+                    <div class="scouting-step" id="step-action">
+                        <h3>Seleziona Azione</h3>
+                        <div class="action-info">
+                            <p><strong>Giocatore:</strong> <span id="selected-player-info"></span></p>
+                            <p><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
+                        </div>
+                        <div class="evaluation-buttons">
+                            <button class="eval-btn" onclick="selectEvaluation(1)">1 - Errore</button>
+                            <button class="eval-btn" onclick="selectEvaluation(2)">2 - Negativo</button>
+                            <button class="eval-btn" onclick="selectEvaluation(3)">3 - Neutro</button>
+                            <button class="eval-btn" onclick="selectEvaluation(4)">4 - Positivo</button>
+                            <button class="eval-btn" onclick="selectEvaluation(5)">5 - Punto</button>
+                            <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
+                        </div>
+                        <button class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
+                    </div>
+                    
+                    
+                    
+                    <div id="actions-log" class="actions-log">
+                        <h4>Log Azioni</h4>
+                        <div id="actions-list"></div>
+                    </div>
+                </dialog>
+            </div>
+        </div>
+    <script src="scount.js"></script>
+</body>
+</html>

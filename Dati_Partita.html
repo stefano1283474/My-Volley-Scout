@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dati Partita</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="match-data" class="page active">
+        <div class="match-summary section" id="match-summary">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Data</div>
+                    <div class="summary-value" id="summary-date">-</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Tipo evento</div>
+                    <div class="summary-value" id="summary-type">-</div>
+                </div>
+                <div class="summary-item" style="grid-column: 1 / -1;">
+                    <div class="summary-label">Squadre</div>
+                    <div class="summary-value" id="summary-teams">-</div>
+                </div>
+            </div>
+        </div>
+        <div class="match-actions">
+            <button id="new-match-btn" class="btn btn-primary active">Nuova Partita</button>
+            <button id="load-matches-btn" class="btn btn-secondary">Partite Precedenti</button>
+        </div>
+        <div class="match-data-container">
+            <div id="new-match-section" class="section">
+                <form id="new-match-form" class="form">
+                    <div class="form-group">
+                        <label for="my-team">Il mio Team:</label>
+                        <input type="text" id="my-team" placeholder="Inserisci il nome della tua squadra" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="opponent-team">Squadra Avversaria:</label>
+                        <input type="text" id="opponent-team" placeholder="Inserisci il nome della squadra avversaria" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="home-away">La mia squadra gioca:</label>
+                        <select id="home-away" required>
+                            <option value="">Seleziona...</option>
+                            <option value="home">In Casa</option>
+                            <option value="away">In Trasferta</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="match-type">Tipologia Partita:</label>
+                        <select id="match-type" required>
+                            <option value="">Seleziona...</option>
+                            <option value="campionato">Campionato</option>
+                            <option value="coppa">Coppa</option>
+                            <option value="amichevole">Amichevole</option>
+                            <option value="playoff">Playoff</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crea Partita</button>
+                </form>
+            </div>
+            <div id="matches-list-section" class="section hidden">
+                <h3>Partite Precedenti</h3>
+                <div id="matches-list" class="matches-list">
+                    <!-- Lista partite caricate dinamicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="dati_partita.js"></script>
+</body>
+</html>

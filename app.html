@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Volley Scout PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css?v=1">
+    <meta name="theme-color" content="#2196F3">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <div class="header">
+            <h1>My Volley Scout</h1>
+            <nav class="nav">
+                <button data-page="match-data" class="nav-btn active" onclick="showPage('match-data')">Match-Data</button>
+                <button data-page="roster" class="nav-btn" onclick="showPage('roster')">El. Gioc.</button>
+                <button data-page="scouting" class="nav-btn" onclick="showPage('scouting')">Start-Scouting</button>
+            </nav>
+        </div>
+
+        <!-- Match Data Section -->
+        <div id="match-data" class="page active">
+            <div class="match-summary section" id="match-summary">
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">Data</div>
+                        <div class="summary-value" id="summary-date">-</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Tipo evento</div>
+                        <div class="summary-value" id="summary-type">-</div>
+                    </div>
+                    <div class="summary-item" style="grid-column: 1 / -1;">
+                        <div class="summary-label">Squadre</div>
+                        <div class="summary-value" id="summary-teams">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="match-actions">
+                <button id="new-match-btn" class="btn btn-primary active">Nuova Partita</button>
+                <button id="load-matches-btn" class="btn btn-secondary">Partite Precedenti</button>
+            </div>
+            <div class="match-data-container">
+                <div id="new-match-section" class="section">
+                    <form id="new-match-form" class="form">
+                        <div class="form-group">
+                            <label for="my-team">Il mio Team:</label>
+                            <input type="text" id="my-team" placeholder="Inserisci il nome della tua squadra" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="opponent-team">Squadra Avversaria:</label>
+                            <input type="text" id="opponent-team" placeholder="Inserisci il nome della squadra avversaria" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="home-away">La mia squadra gioca:</label>
+                            <select id="home-away" required>
+                                <option value="">Seleziona...</option>
+                                <option value="home">In Casa</option>
+                                <option value="away">In Trasferta</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="match-type">Tipologia Partita:</label>
+                            <select id="match-type" required>
+                                <option value="">Seleziona...</option>
+                                <option value="campionato">Campionato</option>
+                                <option value="coppa">Coppa</option>
+                                <option value="amichevole">Amichevole</option>
+                                <option value="playoff">Playoff</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Crea Partita</button>
+                    </form>
+                </div>
+                <div id="matches-list-section" class="section hidden">
+                    <h3>Partite Precedenti</h3>
+                    <div id="matches-list" class="matches-list">
+                        <!-- Lista partite caricate dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roster Section -->
+        <div id="roster" class="page" style="display: none;">
+            <div class="roster-page-content" aria-labelledby="roster-title">
+                <div class="roster-actions">
+                    <button id="btn-create-roster" class="btn btn-primary active">Crea Nuovo</button>
+                    <button id="btn-list-rosters" class="btn btn-secondary">Elenco</button>
+                </div>
+                <div class="roster-data-container">
+                    <div id="create-roster-section" class="section">
+                        <div class="section-header">
+                            <h3 class="section-title">Crea Nuovo Roster</h3>
+                            <div>
+                                <button id="import-roster-create" class="btn btn-secondary">Importa</button>
+                                <input type="file" id="import-roster-file-create" accept="application/json" hidden />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="roster-name-main">Nome Roster:</label>
+                            <input type="text" id="roster-name-main" class="input" placeholder="Inserisci nome roster" required>
+                        </div>
+                        <div id="roster-form-main" class="roster-grid"></div>
+                        <div class="roster-actions-buttons">
+                            <button id="clear-roster-main" class="btn btn-secondary">Pulisci</button>
+                            <button id="save-roster-main" class="btn btn-primary">Salva Roster</button>
+                        </div>
+                    </div>
+                    <div id="list-rosters-section" class="section hidden">
+                        <h3 class="section-title">Roster Salvati</h3>
+                        <div id="rosters-list" class="rosters-list">
+                            <!-- Lista roster caricata dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+                <div class="roster-current-data">
+                    <h3 class="section-title">Dati Giocatrici</h3>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>N°</th>
+                                    <th>Nome</th>
+                                    <th>Cognome</th>
+                                    <th>Ruolo</th>
+                                    <th>Nickname</th>
+                                </tr>
+                            </thead>
+                            <tbody id="roster-table-body"><!-- popolata da renderRosterTable() --></tbody>
+                        </table>
+                    </div>
+                    <div class="roster-actions-buttons">
+                        <button id="export-roster-main" class="btn btn-secondary">Esporta</button>
+                        <button id="import-roster-main" class="btn btn-secondary">Importa</button>
+                        <input type="file" id="import-roster-file-main" accept="application/json" hidden />
+                        <button id="btn-load-roster" class="btn btn-primary btn-load">CARICA</button>
+                    </div>
+                </div>
+            </div>
+            <div id="roster-dialog" class="dialog full-screen" role="dialog" aria-modal="true" aria-labelledby="roster-dialog-title" hidden>
+                <div class="dialog-content">
+                    <div class="dialog-header">
+                        <h2 id="roster-dialog-title">Crea Nuovo Roster</h2>
+                        <button class="dialog-close" onclick="closeDialog('roster-dialog')" aria-label="Chiudi">×</button>
+                    </div>
+                    <div class="dialog-body">
+                        <label class="input-label" for="roster-name-dialog">Nome Roster</label>
+                        <input id="roster-name-dialog" type="text" class="input" placeholder="Inserisci nome" />
+                        <div id="roster-form-dialog" class="roster-grid"></div>
+                    </div>
+                    <div class="dialog-footer">
+                        <input type="file" id="import-roster-file" accept="application/json" hidden />
+                        <button id="import-roster-dialog" class="btn">Importa</button>
+                        <button id="export-roster-dialog" class="btn">Esporta</button>
+                        <button id="clear-roster-dialog" class="btn btn-secondary">Pulisci</button>
+                        <button id="save-roster-dialog" class="btn btn-primary">Salva</button>
+                    </div>
+                </div>
+            </div>
+            <div id="roster-list-dialog" class="dialog full-screen" role="dialog" aria-modal="true" aria-labelledby="roster-list-title" hidden>
+                <div class="dialog-content">
+                    <div class="dialog-header">
+                        <h2 id="roster-list-title">Roster Salvati</h2>
+                        <button class="dialog-close" onclick="closeDialog('roster-list-dialog')" aria-label="Chiudi">×</button>
+                    </div>
+                    <div class="dialog-body">
+                        <div class="button-row">
+                            <input type="file" id="import-roster-list-file" accept="application/json" hidden />
+                            <button id="import-roster-list-btn" class="btn">Importa CSV</button>
+                        </div>
+                        <div id="saved-rosters" class="roster-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scouting Section -->
+        <div id="scouting" class="page" style="display: none;">
+            <div class="section" id="match-info-section" style="display: block;">
+                <h3>Informazioni Partita</h3>
+                <div class="match-info-display">
+                    <div class="match-teams">
+                        <span id="match-home-team">tvb (Il mio Team)</span> vs <span id="match-away-team">coop</span>
+                    </div>
+                    <div class="match-details">
+                        <span id="match-type">-</span> | <span id="match-date">30/08/2025</span>
+                    </div>
+                </div>
+            </div>
+            <div class="section" style="display: block;">
+                <h3>Configurazione Set</h3>
+                <div class="set-config">
+                    <div class="form-group">
+                        <label for="current-set">Set Corrente:</label>
+                        <select id="current-set">
+                            <option value="1">Set 1</option>
+                            <option value="2">Set 2</option>
+                            <option value="3">Set 3</option>
+                            <option value="4">Set 4</option>
+                            <option value="5">Set 5</option>
+                            <option value="6">Set 6</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="rotation">Rotazione Iniziale:</label>
+                        <select id="rotation">
+                            <option value="P1">P1</option>
+                            <option value="P2">P2</option>
+                            <option value="P3">P3</option>
+                            <option value="P4">P4</option>
+                            <option value="P5">P5</option>
+                            <option value="P6">P6</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="game-phase">Fase di Gioco:</label>
+                        <select id="game-phase">
+                            <option value="servizio">Servizio</option>
+                            <option value="ricezione">Ricezione</option>
+                        </select>
+                    </div>
+                    <button id="start-set" class="btn btn-primary">Inizia Set</button>
+                </div>
+            </div>
+
+            <div class="section" id="scouting-section" style="display: none;">
+                <h3>Scouting Azioni</h3>
+                
+                <div class="game-status">
+                    <div class="score">
+                        <span class="home-score">0</span> - <span class="away-score">0</span>
+                    </div>
+                    <div class="current-info">
+                        <span id="current-rotation">P1</span> | 
+                        <span id="current-phase">Servizio</span> | 
+                        <span id="current-set-display">Set 1</span>
+                    </div>
+                </div>
+                
+                <div class="scouting-info">
+                    <div class="phase-info">
+                        <strong>Fase di gioco: <span id="current-phase">servizio</span></strong>
+                    </div>
+                    <div class="next-fundamental-info">
+                        <strong>Prossimo fondamentale: <span id="next-fundamental">Servizio (b)</span></strong>
+                    </div>
+                </div>
+                
+                <dialog id="scouting-dialog" aria-modal="true" aria-label="Scouting Guidato">
+                    
+                    <div class="scouting-step" id="step-player">
+                        <h3>Seleziona Giocatore</h3>
+                        <div class="players-grid" id="players-grid">
+                            <!-- I giocatori verranno caricati dinamicamente -->
+                        </div>
+                    </div>
+                    
+                    <div class="scouting-step" id="step-action">
+                        <h3>Seleziona Azione</h3>
+                        <div class="action-info">
+                            <p><strong>Giocatore:</strong> <span id="selected-player-info"></span></p>
+                            <p><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
+                        </div>
+                        <div class="evaluation-buttons">
+                            <button class="eval-btn" onclick="selectEvaluation(1)">1 - Errore</button>
+                            <button class="eval-btn" onclick="selectEvaluation(2)">2 - Negativo</button>
+                            <button class="eval-btn" onclick="selectEvaluation(3)">3 - Neutro</button>
+                            <button class="eval-btn" onclick="selectEvaluation(4)">4 - Positivo</button>
+                            <button class="eval-btn" onclick="selectEvaluation(5)">5 - Punto</button>
+                            <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
+                        </div>
+                        <button class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
+                    </div>
+                    
+                    
+                    
+                    <div id="actions-log" class="actions-log">
+                        <h4>Log Azioni</h4>
+                        <div id="actions-list"></div>
+                    </div>
+                </dialog>
+            </div>
+        </div>
+        
+    </div>
+    
+    <script src="dati_partita.js?v=2"></script>
+    <script src="roster.js?v=3"></script>
+    <script src="scount.js?v=2"></script>
+    <script>
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            const page = document.getElementById(pageId);
+            page.style.display = 'block';
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            if (!page.dataset.initialized) {
+                if (pageId === 'match-data') initializeMatchDataPage();
+                if (pageId === 'roster') initializeRosterPage();
+                if (pageId === 'scouting') initializeScoutingPage();
+                page.dataset.initialized = 'true';
+            }
+        }
+
+        // Show match-data by default
+        showPage('match-data');
+    </script>
+</body>
+</html>
