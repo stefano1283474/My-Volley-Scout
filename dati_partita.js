@@ -6,7 +6,9 @@ const matchState = {
 };
 
 // Inizializzazione della pagina
-// Rimossa l'auto-init per SPA
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMatchDataPage();
+});
 
 function initializeMatchDataPage() {
     console.log('Initializing Match Data Page');

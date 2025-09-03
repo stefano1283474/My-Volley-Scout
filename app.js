@@ -21,7 +21,6 @@ const rotationSequence = ['P1', 'P6', 'P5', 'P4', 'P3', 'P2'];
 // Inizializzazione dell'app
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded');
-    /*
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
@@ -29,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(err => console.warn('Service Worker registration failed:', err));
         });
     }
-    */
     initializeApp();
     loadStoredData();
     console.log('initializeApp called');

@@ -249,13 +249,14 @@ function renderRosterTable() {
 // Rimossa l'auto-init per SPA
 
 function loadRosterEnabled() {
-  if (!rosterState.rosterName || rosterState.currentRoster.length === 0) {
-    alert('No roster to load');
-    return;
-  }
-  localStorage.setItem('activeRoster', JSON.stringify({
-    name: rosterState.rosterName,
-    players: rosterState.currentRoster
-  }));
-  alert('Roster loaded successfully!');
+    if (!rosterState.rosterName || rosterState.currentRoster.length === 0) {
+        alert('Nessun roster da caricare. Crea o seleziona un roster prima.');
+        return;
+    }
+    const activeRoster = {
+        name: rosterState.rosterName,
+        players: rosterState.currentRoster
+    };
+    localStorage.setItem('activeRoster', JSON.stringify(activeRoster));
+    alert('Roster caricato come attivo con successo!');
 }
