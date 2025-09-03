@@ -513,7 +513,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   max-height: 96vh;
-  overflow: hidden; /* il contenuto interno scorre */
+  overflow-y: auto; /* abilita scroll verticale */
 }
 #scouting-dialog .players-grid {
   display: grid;

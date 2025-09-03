@@ -137,4 +137,67 @@ function selectPlayer(player) {
     showScoutingStep('step-action');
 }
 
-// Altre funzioni scouting estratte e adattate...
+function showScoutingStep(step) {
+    document.querySelectorAll('.scouting-step').forEach(el => {
+        el.style.display = 'none';
+    });
+    const stepEl = document.getElementById(`step-${step}`);
+    if (stepEl) stepEl.style.display = 'block';
+}
+
+function selectEvaluation(value) {
+    scoutingState.selectedEvaluation = value;
+    document.querySelectorAll('.eval-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    event.target.classList.add('selected');
+}
+
+function submitGuidedAction() {
+    if (!scoutingState.selectedPlayer || scoutingState.selectedEvaluation === null) {
+        alert('Seleziona un giocatore e una valutazione');
+        return;
+    }
+    const fundamental = predictNextFundamental();
+    const action = {
+        player: scoutingState.selectedPlayer,
+        fundamental: fundamental,
+        evaluation: scoutingState.selectedEvaluation
+    };
+    scoutingState.actionsLog.push(action);
+    // Semplice logica per punteggi
+    if (scoutingState.selectedEvaluation >= 4) {
+        scoutingState.homeScore++;
+    } else if (scoutingState.selectedEvaluation <= 2) {
+        scoutingState.awayScore++;
+    }
+    updateScoutingUI();
+    // Resetta
+    scoutingState.selectedPlayer = null;
+    scoutingState.selectedEvaluation = null;
+    document.querySelectorAll('.eval-btn').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('selected-player-info').textContent = '';
+    document.getElementById('current-fundamental').textContent = '';
+    showScoutingStep('player');
+}
+
+function submitOpponentError() {
+    scoutingState.homeScore++;
+    const action = { type: 'opponent_error' };
+    scoutingState.actionsLog.push(action);
+    updateScoutingUI();
+    showScoutingStep('player');
+}
+
+function updateScoutingUI() {
+    document.querySelector('.home-score').textContent = scoutingState.homeScore;
+    document.querySelector('.away-score').textContent = scoutingState.awayScore;
+    // Aggiorna log se necessario
+    const logList = document.getElementById('actions-list');
+    logList.innerHTML = '';
+    scoutingState.actionsLog.forEach(action => {
+        const item = document.createElement('div');
+        item.textContent = action.player ? `${action.player.name} - ${action.fundamental} - ${action.evaluation}` : action.type;
+        logList.appendChild(item);
+    });
+}
