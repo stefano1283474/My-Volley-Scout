@@ -201,3 +201,17 @@ function updateScoutingUI() {
         logList.appendChild(item);
     });
 }
+
+function closeScoutingDialog() {
+    const dlg = document.getElementById('scouting-dialog');
+    if (dlg) dlg.close();
+    document.getElementById('scouting-section').style.display = 'none';
+    scoutingState.setStarted = false;
+    // Resetta altri stati se necessario
+    scoutingState.homeScore = 0;
+    scoutingState.awayScore = 0;
+    scoutingState.actionsLog = [];
+    scoutingState.currentSequence = [];
+    scoutingState.selectedPlayer = null;
+    scoutingState.selectedEvaluation = null;
+}
