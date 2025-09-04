@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scouting Guidato - My Volley Scout</title>
+    <link rel="stylesheet" href="styles.css?v=1">
+</head>
+<body>
+    <div class="header">
+        <h1>Scouting Guidato</h1>
+        <button class="nav-btn" onclick="window.location.href='Start_Scouting.html'">← Indietro</button>
+    </div>
+
+    <div class="container">
+        <div class="scouting-step" id="step-player">
+            <h3>Seleziona Giocatore</h3>
+            <div class="players-grid" id="players-grid">
+                <!-- I giocatori verranno caricati dinamicamente -->
+            </div>
+        </div>
+        
+        <div class="scouting-step" id="step-action">
+            <h3>Seleziona Azione</h3>
+            <div class="action-info">
+                <p><strong>Giocatore:</strong> <span id="selected-player-info"></span></p>
+                <p><strong>Fondamentale:</strong> <span id="current-fundamental"></span></p>
+            </div>
+            <div class="evaluation-buttons">
+                <button class="eval-btn" onclick="selectEvaluation(1)">1 - Errore</button>
+                <button class="eval-btn" onclick="selectEvaluation(2)">2 - Negativo</button>
+                <button class="eval-btn" onclick="selectEvaluation(3)">3 - Neutro</button>
+                <button class="eval-btn" onclick="selectEvaluation(4)">4 - Positivo</button>
+                <button class="eval-btn" onclick="selectEvaluation(5)">5 - Punto</button>
+                <button class="eval-btn" onclick="submitOpponentError()">Err Avv</button>
+            </div>
+            <button class="confirm-btn" onclick="submitGuidedAction()">Conferma Azione</button>
+        </div>
+        
+        <div id="actions-log" class="actions-log">
+            <h4>Log Azioni</h4>
+            <div id="actions-list"></div>
+        </div>
+    </div>
+
+    <script src="scount.js?v=1"></script>
+    <script>
+        // Inizializza lo scouting guidato al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carica configurazione dal localStorage
+            const setConfig = JSON.parse(localStorage.getItem('currentSetConfig') || '{}');
+            if (setConfig) {
+                scoutingState.currentSet = setConfig.setNumber;
+                scoutingState.currentRotation = setConfig.rotation;
+                scoutingState.currentPhase = setConfig.gamePhase;
+                updateScoutingUI();
+                updatePlayersGrid();
+            }
+        });
+    </script>
+</body>
+</html>

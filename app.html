@@ -183,49 +183,18 @@
             <div class="section" id="match-info-section" style="display: block;">
                 <h3>Informazioni Partita</h3>
                 <div class="match-info-display">
-                    <div class="match-teams">
-                        <span id="match-home-team">tvb (Il mio Team)</span> vs <span id="match-away-team">coop</span>
-                    </div>
-                    <div class="match-details">
-                        <span id="match-type">-</span> | <span id="match-date">30/08/2025</span>
-                    </div>
+                <div class="match-teams">
+                    <span id="match-home-team">tvb (Il mio Team)</span> vs <span id="match-away-team">coop</span>
+                </div>
+                <div class="match-details">
+                    <span id="match-type">-</span> | <span id="match-date">30/08/2025</span>
                 </div>
             </div>
-            <div class="section" style="display: block;">
-                <h3>Configurazione Set</h3>
-                <div class="set-config">
-                    <div class="form-group">
-                        <label for="current-set">Set Corrente:</label>
-                        <select id="current-set">
-                            <option value="1">Set 1</option>
-                            <option value="2">Set 2</option>
-                            <option value="3">Set 3</option>
-                            <option value="4">Set 4</option>
-                            <option value="5">Set 5</option>
-                            <option value="6">Set 6</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="rotation">Rotazione Iniziale:</label>
-                        <select id="rotation">
-                            <option value="P1">P1</option>
-                            <option value="P2">P2</option>
-                            <option value="P3">P3</option>
-                            <option value="P4">P4</option>
-                            <option value="P5">P5</option>
-                            <option value="P6">P6</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="game-phase">Fase di Gioco:</label>
-                        <select id="game-phase">
-                            <option value="servizio">Servizio</option>
-                            <option value="ricezione">Ricezione</option>
-                        </select>
-                    </div>
-                    <button id="start-set" class="btn btn-primary">Inizia Set</button>
-                </div>
+            <div class="set-config" style="margin-top: 1rem;">
+                <button id="start-scouting-btn" class="btn btn-primary" onclick="window.location.href='Start_Scouting.html'">Inizia Set</button>
             </div>
+        </div>
+
 
             <div class="section" id="scouting-section" style="display: none;">
                 <h3>Scouting Azioni</h3>
@@ -243,7 +212,7 @@
                 
                 <div class="scouting-info">
                     <div class="phase-info">
-                        <strong>Fase di gioco: <span id="current-phase">servizio</span></strong>
+                        <strong>Fase di gioco: <span id="current-phase-info">servizio</span></strong>
                     </div>
                     <div class="next-fundamental-info">
                         <strong>Prossimo fondamentale: <span id="next-fundamental">Servizio (b)</span></strong>
@@ -288,6 +257,9 @@
         
     </div>
     
+    <script src="dati_partita.js?v=1"></script>
+    <script src="roster.js?v=1"></script>
+    <script src="scount.js?v=1"></script>
     <script>
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => {
@@ -302,6 +274,34 @@
             const activeBtn = document.querySelector(`.nav-btn[data-page="${pageId}"]`);
             if (activeBtn) activeBtn.classList.add('active');
 
+            if (pageId === 'scouting') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const set = urlParams.get('set');
+                const rotation = urlParams.get('rotation');
+                const phase = urlParams.get('phase');
+                const scoutingSection = document.getElementById('scouting-section');
+
+                if (set && rotation && phase) { // If we have all params, we are in scouting mode
+                    scoutingSection.style.display = 'block';
+
+                    // Aggiorna l'UI con i parametri
+                    document.getElementById('current-set-display').textContent = `Set ${set}`;
+                    document.getElementById('current-rotation').textContent = rotation;
+                    const phaseText = phase.charAt(0).toUpperCase() + phase.slice(1);
+                    document.getElementById('current-phase').textContent = phaseText;
+                    document.getElementById('current-phase-info').textContent = phase;
+                    
+                    // Carica la configurazione salvata
+                    const setConfig = JSON.parse(localStorage.getItem('currentSetConfig') || '{}');
+                    if (setConfig) {
+                        document.getElementById('match-home-team').textContent = setConfig.homeTeam || 'Il mio Team';
+                        document.getElementById('match-away-team').textContent = setConfig.awayTeam || 'Avversari';
+                    }
+                } else { // Otherwise, hide the scouting section
+                    scoutingSection.style.display = 'none';
+                }
+            }
+
             if (!page.dataset.initialized) {
                 if (pageId === 'match-data') initializeMatchDataPage();
                 if (pageId === 'roster') initializeRosterPage();
@@ -310,11 +310,21 @@
             }
         }
 
-        // Show match-data by default
-        showPage('match-data');
+        // Gestione parametri URL per avviare lo scouting
+        function handleUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+
+            if (page === 'scouting') {
+                showPage('scouting');
+            } else {
+                // Mostra match-data di default
+                showPage('match-data');
+            }
+        }
+
+        // Gestione iniziale
+        handleUrlParams();
     </script>
-    <script src="dati_partita.js?v=1"></script>
-    <script src="roster.js?v=1"></script>
-    <script src="scount.js?v=1"></script>
-</body>
+    </body>
 </html>

@@ -43,6 +43,8 @@ function startSet() {
     scoutingState.selectedPlayer = null;
     scoutingState.selectedEvaluation = null;
     
+    // Nascondi sezione configurazione
+    document.getElementById('set-config-section').style.display = 'none';
     // Mostra sezione scouting
     document.getElementById('scouting-section').style.display = 'block';
     
@@ -53,11 +55,8 @@ function startSet() {
     updateNextFundamental();
     updatePlayersGrid();
     
-    // Apri l'interfaccia guidata e mostra il primo step (selezione giocatore)
-    showScoutingStep('step-player');
-    openDialog('scouting-dialog');
-    
-    alert(`Set ${setNumber} iniziato! Rotazione: ${rotation}, Fase: ${phase}`);
+    // Reindirizza alla nuova pagina di scouting guidato
+    window.location.href = 'Start-Scouting.html';
 }
 
 function updateMatchInfo() {
@@ -110,7 +109,23 @@ function handleOpponentError() {
 }
 
 function updatePlayersGrid() {
-    // Aggiorna griglia giocatori
+    const grid = document.getElementById('players-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const activeRoster = JSON.parse(localStorage.getItem('activeRoster'));
+    if (activeRoster && activeRoster.players) {
+        activeRoster.players.forEach(player => {
+            if (player.name || player.surname) {
+                const btn = document.createElement('button');
+                btn.className = 'player-btn';
+                btn.textContent = `${player.number} - ${player.name} ${player.surname} (${player.role})`;
+                btn.onclick = () => selectPlayer(player);
+                grid.appendChild(btn);
+            }
+        });
+    } else {
+        grid.innerHTML = '<p>Nessun roster attivo caricato.</p>';
+    }
 }
 
 // Altre funzioni scouting estratte e adattate...
