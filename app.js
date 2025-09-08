@@ -219,6 +219,9 @@ function saveMatch(match) {
     }
     
     localStorage.setItem('volleyMatches', JSON.stringify(matches));
+    
+    // Salva automaticamente su Firestore se disponibile
+    saveMatchToFirestore(match);
 }
 
 function getStoredMatches() {
@@ -471,6 +474,9 @@ function saveRoster(roster) {
     }
     
     localStorage.setItem('volleyRosters', JSON.stringify(rosters));
+    
+    // Salva automaticamente su Firestore se disponibile
+    saveRosterToFirestore(roster);
 }
 
 function getStoredRosters() {
@@ -947,6 +953,249 @@ function updateActionsLog() {
         `;
     }).join('');
 }
+
+// ===== INTEGRAZIONE FIREBASE =====
+
+// Variabili per i servizi Firebase (caricate dai file globali)
+
+// Inizializza Firebase quando i moduli sono caricati
+function initializeFirebase() {
+    try {
+        // Verifica che le funzioni Firebase siano disponibili
+        if (typeof window.authFunctions === 'undefined' || typeof window.firestoreService === 'undefined') {
+            setTimeout(initializeFirebase, 500);
+            return;
+        }
+        
+        // Le funzioni Firebase sono ora disponibili tramite window.authFunctions
+        
+        console.log('Firebase inizializzato con successo');
+        
+        // Aggiungi listener per l'autenticazione
+        window.authFunctions.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('Utente autenticato:', user.email);
+                // Abilita funzioni che richiedono autenticazione
+                enableAuthenticatedFeatures();
+            } else {
+                console.log('Utente non autenticato');
+                // Disabilita funzioni che richiedono autenticazione
+                disableAuthenticatedFeatures();
+            }
+        });
+        
+    } catch (error) {
+        console.error('Errore nell\'inizializzazione di Firebase:', error);
+    }
+}
+
+// Abilita funzioni che richiedono autenticazione
+function enableAuthenticatedFeatures() {
+    // Aggiungi bottoni per sincronizzazione e backup
+    addFirebaseButtons();
+}
+
+// Disabilita funzioni che richiedono autenticazione
+function disableAuthenticatedFeatures() {
+    // Rimuovi bottoni Firebase se presenti
+    removeFirebaseButtons();
+}
+
+// Aggiungi bottoni per le funzioni Firebase
+function addFirebaseButtons() {
+    const matchActions = document.querySelector('.match-actions');
+    if (matchActions && !document.getElementById('firebase-buttons')) {
+        const firebaseButtonsDiv = document.createElement('div');
+        firebaseButtonsDiv.id = 'firebase-buttons';
+        firebaseButtonsDiv.className = 'firebase-actions';
+        firebaseButtonsDiv.innerHTML = `
+            <button id="sync-data-btn" class="btn btn-secondary">Sincronizza Dati</button>
+            <button id="backup-data-btn" class="btn btn-secondary">Backup</button>
+            <button id="load-from-cloud-btn" class="btn btn-secondary">Carica da Cloud</button>
+        `;
+        
+        matchActions.appendChild(firebaseButtonsDiv);
+        
+        // Aggiungi event listeners
+        document.getElementById('sync-data-btn').addEventListener('click', syncDataToFirestore);
+        document.getElementById('backup-data-btn').addEventListener('click', backupDataToFirestore);
+        document.getElementById('load-from-cloud-btn').addEventListener('click', loadDataFromFirestore);
+    }
+}
+
+// Rimuovi bottoni Firebase
+function removeFirebaseButtons() {
+    const firebaseButtons = document.getElementById('firebase-buttons');
+    if (firebaseButtons) {
+        firebaseButtons.remove();
+    }
+}
+
+// Sincronizza dati locali con Firestore
+async function syncDataToFirestore() {
+    if (!window.firestoreService) {
+        alert('Firebase non è ancora inizializzato');
+        return;
+    }
+    
+    if (!authFunctions.getCurrentUser()) {
+        alert('Devi essere autenticato per sincronizzare i dati');
+        return;
+    }
+    
+    const syncBtn = document.getElementById('sync-data-btn');
+    syncBtn.disabled = true;
+    syncBtn.textContent = 'Sincronizzando...';
+    
+    try {
+        await integrationHelpers.migrateLocalStorageToFirestore();
+    } catch (error) {
+        console.error('Errore nella sincronizzazione:', error);
+        alert('Errore durante la sincronizzazione');
+    } finally {
+        syncBtn.disabled = false;
+        syncBtn.textContent = 'Sincronizza Dati';
+    }
+}
+
+// Backup dati su Firestore
+async function backupDataToFirestore() {
+    if (!window.firestoreService) {
+        alert('Firebase non è ancora inizializzato');
+        return;
+    }
+    
+    if (!authFunctions.getCurrentUser()) {
+        alert('Devi essere autenticato per fare il backup');
+        return;
+    }
+    
+    const backupBtn = document.getElementById('backup-data-btn');
+    backupBtn.disabled = true;
+    backupBtn.textContent = 'Backup in corso...';
+    
+    try {
+        const result = await window.firestoreService.autoBackup();
+        if (result.success) {
+            alert('Backup completato con successo!');
+        } else {
+            alert('Errore durante il backup: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Errore nel backup:', error);
+        alert('Errore durante il backup');
+    } finally {
+        backupBtn.disabled = false;
+        backupBtn.textContent = 'Backup';
+    }
+}
+
+// Carica dati da Firestore
+async function loadDataFromFirestore() {
+    if (!integrationHelpers) {
+        alert('Firebase non è ancora inizializzato');
+        return;
+    }
+    
+    if (!authFunctions.getCurrentUser()) {
+        alert('Devi essere autenticato per caricare i dati');
+        return;
+    }
+    
+    const loadBtn = document.getElementById('load-from-cloud-btn');
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Caricando...';
+    
+    try {
+        await integrationHelpers.loadFromFirestoreToLocal();
+    } catch (error) {
+        console.error('Errore nel caricamento:', error);
+        alert('Errore durante il caricamento');
+    } finally {
+        loadBtn.disabled = false;
+        loadBtn.textContent = 'Carica da Cloud';
+    }
+}
+
+// Salva automaticamente su Firestore quando si crea una nuova partita
+function saveMatchToFirestore(matchData) {
+    if (firestoreService && authFunctions.getCurrentUser()) {
+        firestoreService.saveMatch(matchData)
+            .then(result => {
+                if (result.success) {
+                    console.log('Partita salvata su Firestore:', result.id);
+                    // Aggiorna il dato locale con l'ID Firestore
+                    matchData.firestoreId = result.id;
+                    matchData.synced = true;
+                } else {
+                    console.error('Errore nel salvataggio su Firestore:', result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Errore nel salvataggio su Firestore:', error);
+            });
+    }
+}
+
+// Salva automaticamente roster su Firestore
+function saveRosterToFirestore(rosterData) {
+    if (firestoreService && authFunctions.getCurrentUser()) {
+        firestoreService.saveRoster(rosterData)
+            .then(result => {
+                if (result.success) {
+                    console.log('Roster salvato su Firestore:', result.id);
+                    // Aggiorna il dato locale con l'ID Firestore
+                    rosterData.firestoreId = result.id;
+                    rosterData.synced = true;
+                } else {
+                    console.error('Errore nel salvataggio roster su Firestore:', result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Errore nel salvataggio roster su Firestore:', error);
+            });
+    }
+}
+
+// Inizializza Firebase quando l'app si carica
+document.addEventListener('DOMContentLoaded', function() {
+    // Aspetta un po' prima di inizializzare Firebase per assicurarsi che tutto sia caricato
+    setTimeout(initializeFirebase, 1000);
+});
+
+// Aggiungi CSS per i bottoni Firebase
+const firebaseStyles = `
+    .firebase-actions {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #ddd;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .firebase-actions .btn {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .firebase-actions {
+            flex-direction: column;
+        }
+        
+        .firebase-actions .btn {
+            width: 100%;
+        }
+    }
+`;
+
+// Aggiungi gli stili al documento
+const styleSheet = document.createElement('style');
+styleSheet.textContent = firebaseStyles;
+document.head.appendChild(styleSheet);
+
+console.log('Integrazione Firebase caricata');
 
 function checkSetEnd() {
     const homeScore = appState.homeScore;
