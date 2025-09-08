@@ -737,8 +737,10 @@ body {
 .user-info {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     color: white;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .user-info span {

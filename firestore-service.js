@@ -24,18 +24,19 @@ const firestoreService = {
             const doc = await userCollectionRef.get();
             
             if (!doc.exists) {
-                // Crea documento utente con struttura base
-                await userCollectionRef.set({
-                    email: userEmail,
-                    collectionName: safeCollectionName,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    lastAccess: firebase.firestore.FieldValue.serverTimestamp(),
-                    stats: {
-                        totalMatches: 0,
-                        totalRosters: 0,
-                        lastMatchDate: null
-                    }
-                });
+                // Crea documento utente con struttura base e ruolo
+            await userCollectionRef.set({
+                email: userEmail,
+                collectionName: safeCollectionName,
+                role: 'user', // Ruolo predefinito per nuovi utenti
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastAccess: firebase.firestore.FieldValue.serverTimestamp(),
+                stats: {
+                    totalMatches: 0,
+                    totalRosters: 0,
+                    lastMatchDate: null
+                }
+            });
                 
                 console.log('Collection utente creata:', safeCollectionName);
             } else {
@@ -75,6 +76,80 @@ const firestoreService = {
         } catch (error) {
             console.error('Errore nell\'aggiornamento ultimo accesso:', error);
             return { success: false, error: error.message };
+        }
+    },
+
+    // Gestione ruoli utente
+    setUserRole: async (userEmail, role) => {
+        try {
+            const user = authFunctions.getCurrentUser();
+            if (!user) return { success: false, error: 'Utente non autenticato' };
+
+            // Solo admin può modificare ruoli
+            const currentUserDoc = await window.db.collection('users').doc(user.uid).get();
+            const currentUserData = currentUserDoc.data();
+            
+            if (currentUserData?.role !== 'admin') {
+                return { success: false, error: 'Permessi insufficienti: solo admin può modificare ruoli' };
+            }
+
+            // Trova l'utente target per email
+            const targetUserQuery = await window.db.collection('users')
+                .where('email', '==', userEmail)
+                .limit(1)
+                .get();
+
+            if (targetUserQuery.empty) {
+                return { success: false, error: 'Utente target non trovato' };
+            }
+
+            const targetUserDoc = targetUserQuery.docs[0];
+            await targetUserDoc.ref.update({
+                role: role,
+                roleUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                roleUpdatedBy: user.email
+            });
+
+            console.log(`Ruolo ${role} assegnato a ${userEmail}`);
+            return { success: true };
+
+        } catch (error) {
+            console.error('Errore nella gestione ruoli:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Ottieni ruolo utente
+    getUserRole: async (userEmail = null) => {
+        try {
+            const user = authFunctions.getCurrentUser();
+            if (!user) return { success: false, error: 'Utente non autenticato' };
+
+            const targetEmail = userEmail || user.email;
+            const userDoc = await window.db.collection('users').doc(user.uid).get();
+            
+            if (!userDoc.exists) {
+                // Crea utente se non esiste
+                await firestoreService.createUserCollection(targetEmail);
+                return { success: true, role: 'user' };
+            }
+
+            const userData = userDoc.data();
+            return { success: true, role: userData?.role || 'user' };
+
+        } catch (error) {
+            console.error('Errore nel recupero ruolo:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    // Verifica se l'utente è admin
+    isUserAdmin: async () => {
+        try {
+            const result = await firestoreService.getUserRole();
+            return { success: true, isAdmin: result.success && result.role === 'admin' };
+        } catch (error) {
+            return { success: false, error: error.message, isAdmin: false };
         }
     },
 

@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="auth.css">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
     <meta name="theme-color" content="#2563eb">
+    <script>
+        // Registra il Service Worker per PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('Service Worker registrato:', registration))
+                    .catch(error => console.log('Registrazione Service Worker fallita:', error));
+            });
+        }
+    </script>
     
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>

@@ -6,8 +6,18 @@
     <title>My Volley Scout PWA</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css?v=1">
-    <meta name="theme-color" content="#2196F3">
+    <meta name="theme-color" content="#2563eb">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+    <script>
+        // Registra il Service Worker per PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => console.log('Service Worker registrato:', registration))
+                    .catch(error => console.log('Registrazione Service Worker fallita:', error));
+            });
+        }
+    </script>
 </head>
 <body>
     <div id="app">
@@ -22,6 +32,8 @@
                     
                     <div id="userInfo" class="user-info" style="display: none;">
                         <span id="userEmail"></span>
+                        <span id="userRole" style="margin-left: 10px; font-size: 0.8em; color: #666;"></span>
+                        <button id="adminBtn" class="btn btn-outline" style="display: none; margin-left: 10px;" onclick="window.location.href='admin.html'">Admin</button>
                         <button id="signOutBtn" class="btn btn-outline">Esci</button>
                     </div>
                 </div>

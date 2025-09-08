@@ -23,25 +23,30 @@ function initializeAuth() {
             
             // Aspetta un momento per assicurarsi che tutti i servizi siano caricati
             setTimeout(async () => {
-                // Crea la collection personalizzata per l'utente
-                if (window.firestoreService && window.firestoreService.createUserCollection) {
-                    try {
+                try {
+                    // Crea la collection personalizzata per l'utente
+                    if (window.firestoreService && window.firestoreService.createUserCollection) {
                         const result = await window.firestoreService.createUserCollection(user.email);
                         if (result.success) {
                             console.log('Collection utente creata/verificata:', result.collectionName);
                         }
-                    } catch (error) {
-                        console.error('Errore nella creazione collection utente:', error);
                     }
-                }
-                
-                // Aggiorna l'ultimo accesso
-                if (window.firestoreService && window.firestoreService.updateUserLastAccess) {
-                    try {
+                    
+                    // Verifica ruolo utente
+                    if (window.firestoreService && window.firestoreService.getUserRole) {
+                        const roleResult = await window.firestoreService.getUserRole();
+                        if (roleResult.success) {
+                            authState.userRole = roleResult.role;
+                            console.log('Ruolo utente:', roleResult.role);
+                        }
+                    }
+                    
+                    // Aggiorna l'ultimo accesso
+                    if (window.firestoreService && window.firestoreService.updateUserLastAccess) {
                         await window.firestoreService.updateUserLastAccess(user.email);
-                    } catch (error) {
-                        console.error('Errore nell\'aggiornamento ultimo accesso:', error);
                     }
+                } catch (error) {
+                    console.error('Errore nella gestione utente autenticato:', error);
                 }
             }, 1000);
             
@@ -56,6 +61,7 @@ function initializeAuth() {
             hideAuthModal();
         } else {
             console.log('Utente non autenticato');
+            authState.userRole = null;
             updateAuthUI(null);
         }
     });
@@ -223,18 +229,32 @@ function hideAuthModal() {
 }
 
 // Aggiorna l'interfaccia utente in base allo stato di autenticazione
-function updateAuthUI(user = null) {
+async function updateAuthUI(user = null) {
     const authButtons = document.getElementById('authButtons');
     const userInfo = document.getElementById('userInfo');
     const userEmail = document.getElementById('userEmail');
-    
+    const userRole = document.getElementById('userRole');
+    const adminBtn = document.getElementById('adminBtn');
+
     if (user || authState.isAuthenticated) {
         if (authButtons) authButtons.style.display = 'none';
         if (userInfo) userInfo.style.display = 'flex';
         if (userEmail) userEmail.textContent = (user || authState.user).email;
+
+        // Mostra ruolo se disponibile
+        if (userRole) {
+            userRole.textContent = authState.userRole ? `(${authState.userRole})` : '';
+        }
+
+        // Mostra bottone admin solo per admin
+        if (adminBtn) {
+            adminBtn.style.display = authState.userRole === 'admin' ? 'inline-block' : 'none';
+        }
     } else {
         if (authButtons) authButtons.style.display = 'flex';
         if (userInfo) userInfo.style.display = 'none';
+        if (userRole) userRole.textContent = '';
+        if (adminBtn) adminBtn.style.display = 'none';
     }
 }
 
