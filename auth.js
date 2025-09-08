@@ -13,16 +13,50 @@ function initializeAuth() {
     }
     
     // Ascolta i cambiamenti dello stato di autenticazione
-    authFunctions.onAuthStateChanged((user) => {
+    authFunctions.onAuthStateChanged(async (user) => {
         authState.user = user;
         authState.isAuthenticated = !!user;
-        updateAuthUI();
         
+        // Utente autenticato
         if (user) {
-            console.log('User signed in:', user.email);
+            console.log('Utente autenticato:', user.email);
+            
+            // Aspetta un momento per assicurarsi che tutti i servizi siano caricati
+            setTimeout(async () => {
+                // Crea la collection personalizzata per l'utente
+                if (window.firestoreService && window.firestoreService.createUserCollection) {
+                    try {
+                        const result = await window.firestoreService.createUserCollection(user.email);
+                        if (result.success) {
+                            console.log('Collection utente creata/verificata:', result.collectionName);
+                        }
+                    } catch (error) {
+                        console.error('Errore nella creazione collection utente:', error);
+                    }
+                }
+                
+                // Aggiorna l'ultimo accesso
+                if (window.firestoreService && window.firestoreService.updateUserLastAccess) {
+                    try {
+                        await window.firestoreService.updateUserLastAccess(user.email);
+                    } catch (error) {
+                        console.error('Errore nell\'aggiornamento ultimo accesso:', error);
+                    }
+                }
+            }, 1000);
+            
+            // Aggiorna l'interfaccia utente
+            updateAuthUI(user);
+            
+            // Carica i dati dell'utente
+            if (window.firestoreService) {
+                await window.firestoreService.loadUserData(user.uid);
+            }
+            
             hideAuthModal();
         } else {
-            console.log('User signed out');
+            console.log('Utente non autenticato');
+            updateAuthUI(null);
         }
     });
 
@@ -189,15 +223,15 @@ function hideAuthModal() {
 }
 
 // Aggiorna l'interfaccia utente in base allo stato di autenticazione
-function updateAuthUI() {
+function updateAuthUI(user = null) {
     const authButtons = document.getElementById('authButtons');
     const userInfo = document.getElementById('userInfo');
     const userEmail = document.getElementById('userEmail');
     
-    if (authState.isAuthenticated) {
+    if (user || authState.isAuthenticated) {
         if (authButtons) authButtons.style.display = 'none';
         if (userInfo) userInfo.style.display = 'flex';
-        if (userEmail) userEmail.textContent = authState.user.email;
+        if (userEmail) userEmail.textContent = (user || authState.user).email;
     } else {
         if (authButtons) authButtons.style.display = 'flex';
         if (userInfo) userInfo.style.display = 'none';

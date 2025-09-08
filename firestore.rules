@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regole per la collection users - ogni utente può accedere solo al proprio documento
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Regole per le partite - ogni utente può accedere solo alle proprie partite
+    match /matches/{matchId} {
+      allow read, write: if request.auth != null && 
+                          (resource.data.userId == request.auth.uid || 
+                           request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Regole per i roster - ogni utente può accedere solo ai propri roster
+    match /rosters/{rosterId} {
+      allow read, write: if request.auth != null && 
+                          (resource.data.userId == request.auth.uid || 
+                           request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Regole per le azioni di gioco
+    match /match_actions/{actionId} {
+      allow read, write: if request.auth != null && 
+                          (resource.data.userId == request.auth.uid || 
+                           request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Regole per le statistiche
+    match /match_stats/{statId} {
+      allow read, write: if request.auth != null && 
+                          (resource.data.userId == request.auth.uid || 
+                           request.resource.data.userId == request.auth.uid);
+    }
+    
+    // Regole per i backup
+    match /backups/{backupId} {
+      allow read, write: if request.auth != null && 
+                          (resource.data.userId == request.auth.uid || 
+                           request.resource.data.userId == request.auth.uid);
+    }
+  }
+}

@@ -14,10 +14,34 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = firebase.initializeApp(firebaseConfig);
-const analytics = firebase.analytics();
+
+// Initialize Analytics only if needed (to reduce errors)
+let analytics = null;
+try {
+  analytics = firebase.analytics();
+} catch (error) {
+  console.warn('Analytics initialization failed:', error);
+}
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+// Configure Firestore settings to reduce connection errors
+db.settings({
+  cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
+  ignoreUndefinedProperties: true
+});
+
+// Enable offline persistence
+db.enablePersistence({ synchronizeTabs: true })
+  .catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+    } else if (err.code == 'unimplemented') {
+      console.warn('The current browser does not support all of the features required to enable persistence');
+    }
+  });
 
 // Authentication functions
 const authFunctions = {

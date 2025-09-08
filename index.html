@@ -18,10 +18,7 @@
                 
                 <!-- Authentication Section -->
                 <div class="auth-section">
-                    <div id="authButtons" class="auth-buttons">
-                        <button id="showLoginBtn" class="btn btn-outline">Accedi</button>
-                        <button id="showRegisterBtn" class="btn btn-primary">Registrati</button>
-                    </div>
+
                     
                     <div id="userInfo" class="user-info" style="display: none;">
                         <span id="userEmail"></span>
@@ -386,9 +383,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-analytics.js"></script>
     
     <!-- Carica i file di configurazione Firebase -->
-    <script src="./firebase-config.js?v=3"></script>
-    <script src="./firestore-service.js?v=3"></script>
-    <script src="./auth.js?v=3"></script>
+    <script src="./connection-manager.js?v=1"></script>
+    <script src="./firebase-config.js?v=4"></script>
+    <script src="./firestore-service.js?v=4"></script>
+    <script src="./auth.js?v=4"></script>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
